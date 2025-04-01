@@ -1,0 +1,200 @@
+client/
+├── public/
+│   ├── index.html
+│   ├── favicon.ico
+│   ├── manifest.json
+│   └── assets/
+│       ├── images/
+│       └── fonts/
+│
+├── src/
+│   ├── index.js                     # Application entry point
+│   ├── App.js                       # Root application component
+│   ├── setupTests.js                # Test configuration
+│   │
+│   ├── components/
+│   │   ├── core/
+│   │   │   ├── Button.js
+│   │   │   ├── Input.js
+│   │   │   ├── Select.js
+│   │   │   ├── Checkbox.js
+│   │   │   ├── RadioButton.js
+│   │   │   ├── Toggle.js
+│   │   │   ├── Dropdown.js
+│   │   │   ├── Modal.js
+│   │   │   ├── Tooltip.js
+│   │   │   ├── Card.js
+│   │   │   ├── Table.js
+│   │   │   ├── Tabs.js
+│   │   │   ├── Spinner.js
+│   │   │   ├── Notification.js
+│   │   │   └── index.js             # Exports all core components
+│   │   │
+│   │   ├── layout/
+│   │   │   ├── AppLayout.js         # Main application layout
+│   │   │   ├── Sidebar.js           # Navigation sidebar
+│   │   │   ├── Navbar.js            # Top navigation bar
+│   │   │   ├── Footer.js            # Application footer
+│   │   │   ├── ContentArea.js       # Main content container
+│   │   │   └── index.js
+│   │   │
+│   │   ├── editor/
+│   │   │   ├── UIEditor/
+│   │   │   │   ├── index.js                 # Main UIEditor component
+│   │   │   │   ├── ComponentPalette.js      # Component selection panel
+│   │   │   │   ├── Canvas.js                # Main editing canvas
+│   │   │   │   ├── ComponentInstance.js     # Rendered component on canvas
+│   │   │   │   ├── DropZone.js              # Component drop target
+│   │   │   │   ├── PropertyPanel.js         # Component property editor
+│   │   │   │   └── ContextMenu.js           # Right-click menu for components
+│   │   │   │
+│   │   │   ├── CodeEditor/
+│   │   │   │   ├── index.js                 # Main CodeEditor component
+│   │   │   │   ├── CodePanel.js             # Code editing panel
+│   │   │   │   ├── FileTabs.js              # HTML/CSS/JS tab navigation
+│   │   │   │   ├── SyntaxHighlighter.js     # Code syntax highlighting
+│   │   │   │   └── ErrorDisplay.js          # Code error highlighting
+│   │   │   │
+│   │   │   ├── SyncEngine/
+│   │   │   │   ├── index.js                 # Main SyncEngine component
+│   │   │   │   ├── UIToCode.js              # UI to code conversion logic
+│   │   │   │   ├── CodeToUI.js              # Code to UI conversion logic
+│   │   │   │   ├── DiffManager.js           # Change detection
+│   │   │   │   └── EventBus.js              # Communication between editors
+│   │   │   │
+│   │   │   ├── Templates/
+│   │   │   │   ├── index.js                 # Template selector
+│   │   │   │   ├── TemplateCard.js          # Template preview card
+│   │   │   │   ├── TemplatePreview.js       # Full template preview
+│   │   │   │   └── TemplateImporter.js      # Import custom templates
+│   │   │   │
+│   │   │   ├── Toolbar/
+│   │   │   │   ├── index.js                 # Main toolbar component
+│   │   │   │   ├── ActionButtons.js         # Save, publish, preview buttons
+│   │   │   │   ├── DevicePreviewToggle.js   # Mobile/tablet/desktop toggle
+│   │   │   │   ├── ZoomControls.js          # Zoom in/out controls
+│   │   │   │   └── HistoryControls.js       # Undo/redo buttons
+│   │   │   │
+│   │   │   ├── ComponentLibrary/
+│   │   │   │   ├── index.js                 # Component library panel
+│   │   │   │   ├── ComponentCategory.js     # Component category grouping
+│   │   │   │   ├── ComponentPreview.js      # Component preview item
+│   │   │   │   └── SearchComponent.js       # Component search box
+│   │   │   │
+│   │   │   └── EditorInterface.js           # Main editor interface
+│   │   │
+│   │   ├── preview/
+│   │   │   ├── LivePreview.js               # Real-time site preview
+│   │   │   ├── DevicePreview.js             # Responsive device preview
+│   │   │   ├── PreviewFrame.js              # Iframe for site preview
+│   │   │   └── index.js
+│   │   │
+│   │   ├── site/
+│   │   │   ├── SiteCard.js                  # Site preview card
+│   │   │   ├── SiteList.js                  # List of user's sites
+│   │   │   ├── SiteSettings.js              # Site configuration panel
+│   │   │   ├── SiteStats.js                 # Site analytics display
+│   │   │   └── index.js
+│   │   │
+│   │   ├── auth/
+│   │   │   ├── LoginForm.js                 # User login form
+│   │   │   ├── RegisterForm.js              # User registration form
+│   │   │   ├── ForgotPasswordForm.js        # Password reset form
+│   │   │   ├── ProfileForm.js               # User profile editor
+│   │   │   └── index.js
+│   │   │
+│   │   └── ui/                              # Shadcn UI components
+│   │       ├── alert.js
+│   │       ├── alert-dialog.js
+│   │       ├── button.js
+│   │       ├── card.js
+│   │       ├── checkbox.js
+│   │       ├── dialog.js
+│   │       ├── dropdown-menu.js
+│   │       ├── form.js
+│   │       ├── input.js
+│   │       ├── label.js
+│   │       ├── popover.js
+│   │       ├── select.js
+│   │       ├── separator.js
+│   │       ├── tabs.js
+│   │       ├── textarea.js
+│   │       ├── toast.js
+│   │       └── toggle.js
+│   │
+│   ├── pages/
+│   │   ├── HomePage.js                  # Landing page
+│   │   ├── DashboardPage.js             # User dashboard
+│   │   ├── EditorPage.js                # Main CMS editor page
+│   │   ├── SiteManagerPage.js           # Site management page
+│   │   ├── TemplatesPage.js             # Template selection page
+│   │   ├── SettingsPage.js              # User settings page
+│   │   ├── ProfilePage.js               # User profile page
+│   │   ├── LoginPage.js                 # Login page
+│   │   ├── RegisterPage.js              # Registration page
+│   │   └── NotFoundPage.js              # 404 page
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.js                   # Authentication hook
+│   │   ├── useSite.js                   # Site data hook
+│   │   ├── useComponentDrag.js          # Component drag & drop hook
+│   │   ├── useCodeSync.js               # UI-Code sync hook
+│   │   ├── useLocalStorage.js           # Local storage hook
+│   │   ├── useMediaQuery.js             # Responsive design hook
+│   │   ├── useDebounce.js               # Input debounce hook
+│   │   └── useFetch.js                  # API fetch hook
+│   │
+│   ├── store/
+│   │   ├── index.js                     # Store configuration
+│   │   ├── slices/
+│   │   │   ├── authSlice.js             # Authentication state
+│   │   │   ├── siteSlice.js             # Site data state
+│   │   │   ├── editorSlice.js           # Editor UI state
+│   │   │   ├── uiSlice.js               # UI state
+│   │   │   └── templateSlice.js         # Template state
+│   │   │
+│   │   └── middleware/
+│   │       ├── authMiddleware.js        # Authentication middleware
+│   │       ├── syncMiddleware.js        # UI-Code sync middleware
+│   │       ├── loggerMiddleware.js      # Action logging middleware
+│   │       └── apiMiddleware.js         # API request middleware
+│   │
+│   ├── services/
+│   │   ├── api.js                       # Base API client setup
+│   │   ├── authService.js               # Authentication API calls
+│   │   ├── siteService.js               # Site management API calls
+│   │   ├── templateService.js           # Template API calls
+│   │   ├── userService.js               # User management API calls
+│   │   └── analyticsService.js          # Analytics API calls
+│   │
+│   ├── utils/
+│   │   ├── codeGenerator.js             # Converts UI components to code
+│   │   ├── codeParser.js                # Parses code into UI components
+│   │   ├── componentRegistry.js         # Available UI components
+│   │   ├── validation.js                # Form validation utilities
+│   │   ├── formatters.js                # Data formatting utilities
+│   │   ├── storage.js                   # Storage utilities
+│   │   ├── history.js                   # Undo/redo helpers
+│   │   └── helpers.js                   # General helper functions
+│   │
+│   ├── types/
+│   │   ├── site.js                      # Site type definitions
+│   │   ├── component.js                 # Component type definitions
+│   │   ├── user.js                      # User type definitions
+│   │   ├── template.js                  # Template type definitions
+│   │   └── index.js                     # Type exports
+│   │
+│   └── styles/
+│       ├── globals.css                  # Global styles
+│       ├── variables.css                # CSS variables
+│       ├── editor.css                   # Editor-specific styles
+│       ├── animations.css               # Animation definitions
+│       └── themes/
+│           ├── light.css                # Light theme
+│           └── dark.css                 # Dark theme
+│
+├── package.json                         # Project dependencies
+├── tsconfig.json                        # TypeScript configuration
+├── vite.config.js                       # Vite configuration
+├── .eslintrc.js                         # ESLint configuration
+└── README.md                            # Project documentation

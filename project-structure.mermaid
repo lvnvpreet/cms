@@ -1,0 +1,57 @@
+graph TD
+    Root["/ (Project Root)"]
+    
+    Root --> Client["client/ (Frontend)"]
+    Root --> Server["server/ (Backend)"]
+    Root --> Config["config/ (Configuration)"]
+    Root --> Docs["docs/ (Documentation)"]
+    Root --> Scripts["scripts/ (Build/Deploy)"]
+    
+    %% Frontend Structure
+    Client --> Public["public/ (Static assets)"]
+    Client --> SrcFE["src/ (Frontend source)"]
+    
+    SrcFE --> Components["components/ (UI Components)"]
+    SrcFE --> Pages["pages/ (Application pages)"]
+    SrcFE --> Hooks["hooks/ (Custom React hooks)"]
+    SrcFE --> Store["store/ (State management)"]
+    SrcFE --> Services["services/ (API clients)"]
+    SrcFE --> Utils["utils/ (Helper functions)"]
+    SrcFE --> Types["types/ (TypeScript types)"]
+    SrcFE --> Styles["styles/ (Global styles)"]
+    
+    %% Components breakdown
+    Components --> Core["core/ (Base components)"]
+    Components --> Editor["editor/ (CMS Editor components)"]
+    Components --> Preview["preview/ (Site preview)"]
+    Components --> UI["ui/ (Shadcn UI components)"]
+    
+    %% Editor components
+    Editor --> UIEditor["UIEditor/ (Visual editor)"]
+    Editor --> CodeEditor["CodeEditor/ (Code editor)"]
+    Editor --> SyncEngine["SyncEngine/ (UI-Code sync)"]
+    Editor --> Templates["Templates/ (Site templates)"]
+    
+    %% State management
+    Store --> Slices["slices/ (State slices)"]
+    Store --> Middleware["middleware/ (State middleware)"]
+    
+    %% Backend Structure
+    Server --> SrcBE["src/ (Backend source)"]
+    Server --> Config["config/ (Server config)"]
+    Server --> Public["public/ (Served files)"]
+    
+    SrcBE --> Controllers["controllers/ (API endpoints)"]
+    SrcBE --> Models["models/ (Data models)"]
+    SrcBE --> Services["services/ (Business logic)"]
+    SrcBE --> Routes["routes/ (API routes)"]
+    SrcBE --> Middleware["middleware/ (Request handlers)"]
+    SrcBE --> Utils["utils/ (Helper functions)"]
+    SrcBE --> DB["db/ (Database connection)"]
+    
+    %% Services breakdown
+    Services --> Auth["auth/ (Authentication)"]
+    Services --> Sites["sites/ (Site management)"]
+    Services --> CodeGen["codegen/ (Code generation)"]
+    Services --> Renderer["renderer/ (Site rendering)"]
+    Services --> Deploy["deploy/ (Deployment)"]
