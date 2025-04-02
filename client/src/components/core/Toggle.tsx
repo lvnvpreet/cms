@@ -1,67 +1,125 @@
-import * as React from "react";
-import * as TogglePrimitive from "@radix-ui/react-toggle";
-import { cva, type VariantProps } from "class-variance-authority";
+import React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '../../lib/utils';
 
-import { cn } from "../../lib/utils"; // Adjusted path relative to core
-
-// Define toggle variants adapting button styles
+// Define toggle variants using class-variance-authority
 const toggleVariants = cva(
-  // Base styles from Button, adjusted for toggle interaction
-  'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground',
+  'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground disabled:opacity-50 disabled:pointer-events-none',
   {
     variants: {
       variant: {
-        default: "bg-transparent hover:bg-muted hover:text-muted-foreground", // Default toggle is often transparent until active
-        outline: 'border border-input bg-transparent hover:bg-accent hover:text-accent-foreground', // Similar to button outline
+        default: 'bg-transparent border border-input hover:bg-accent hover:text-accent-foreground',
+        outline: 'border border-input bg-transparent hover:bg-accent hover:text-accent-foreground',
+        soft: 'bg-muted hover:bg-muted/80',
       },
       size: {
-        // Using sizes closer to Button for consistency in core
-        default: "h-10 px-3", // Match Button height, adjust padding
-        sm: "h-9 px-2",    // Match Button sm height
-        lg: "h-11 px-4",    // Match Button lg height
+        default: 'h-10 px-4',
+        sm: 'h-9 px-3 rounded-md',
+        lg: 'h-11 px-8 rounded-md',
+        icon: 'h-10 w-10',
       },
     },
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      variant: 'default',
+      size: 'default',
     },
   }
 );
 
-// Define Toggle props by extending Radix Toggle props and VariantProps
+// Define toggle props by extending HTML button attributes
 export interface ToggleProps
-  extends React.ComponentPropsWithoutRef<typeof TogglePrimitive.Root>,
-    VariantProps<typeof toggleVariants> {}
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof toggleVariants> {
+  defaultPressed?: boolean;
+  pressed?: boolean;
+  onPressedChange?: (pressed: boolean) => void;
+  icon?: React.ReactNode;
+  label?: string;
+  labelPosition?: 'left' | 'right';
+}
 
 /**
- * Toggle component based on Radix UI Toggle Primitive, styled similarly to core Button.
- * Allows users to switch between two states (on/off).
- *
+ * Toggle component that can be switched between on and off states
+ * 
  * @example
  * ```tsx
- * import { Bold } from 'lucide-react'; // Example icon import
- *
- * <Toggle aria-label="Toggle bold">
- *   <Bold className="h-4 w-4" />
+ * <Toggle>Toggle me</Toggle>
+ * 
+ * <Toggle variant="outline" defaultPressed>
+ *   Pressed by default
  * </Toggle>
- *
- * <Toggle variant="outline" size="sm">
- *   Outline Small
+ * 
+ * <Toggle icon={<Icon />} pressed={isPressed} onPressedChange={setIsPressed}>
+ *   With Icon
  * </Toggle>
+ * 
+ * <Toggle label="With Label" labelPosition="left" />
  * ```
  */
-const Toggle = React.forwardRef<
-  React.ElementRef<typeof TogglePrimitive.Root>,
-  ToggleProps
->(({ className, variant, size, ...props }, ref) => (
-  <TogglePrimitive.Root
-    ref={ref}
-    className={cn(toggleVariants({ variant, size, className }))}
-    {...props}
-  />
-));
+const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
+  ({
+    className,
+    variant,
+    size,
+    children,
+    defaultPressed = false,
+    pressed,
+    onPressedChange,
+    icon,
+    label,
+    labelPosition = 'right',
+    disabled,
+    ...props
+  }, ref) => {
+    const [internalPressed, setInternalPressed] = React.useState(defaultPressed);
+    
+    // Determine if component is controlled or uncontrolled
+    const isControlled = pressed !== undefined;
+    const isPressed = isControlled ? pressed : internalPressed;
+    
+    const handleClick = React.useCallback(() => {
+      if (!isControlled) {
+        setInternalPressed(!internalPressed);
+      }
+      
+      onPressedChange?.(!isPressed);
+    }, [isControlled, internalPressed, isPressed, onPressedChange]);
+    
+    // Content to display
+    const content = (
+      <>
+        {icon && <span className="mr-2">{icon}</span>}
+        {children}
+      </>
+    );
+    
+    return (
+      <div className="flex items-center">
+        {label && labelPosition === 'left' && (
+          <span className="mr-2 text-sm">{label}</span>
+        )}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isPressed}
+          data-state={isPressed ? 'on' : 'off'}
+          className={cn(toggleVariants({ variant, size, className }))}
+          onClick={handleClick}
+          ref={ref}
+          disabled={disabled}
+          {...props}
+        >
+          {content}
+        </button>
+        {label && labelPosition === 'right' && (
+          <span className="ml-2 text-sm">{label}</span>
+        )}
+      </div>
+    );
+  }
+);
 
-Toggle.displayName = TogglePrimitive.Root.displayName;
+Toggle.displayName = 'Toggle';
 
 export { Toggle, toggleVariants };
-export default Toggle; // Added default export like Button.tsx
+export default Toggle;
