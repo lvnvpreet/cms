@@ -51,15 +51,16 @@ const UIEditor: React.FC<UIEditorProps> = ({
   // Example layout - adjust based on actual requirements
   // This assumes EditorInterface passes down the necessary props
   return (
-    <div className="flex flex-1 overflow-hidden"> {/* Main editor area layout */}
+    // Ensure this container takes full height within its parent (TabsContent)
+    <div className="flex flex-1 overflow-hidden h-full w-full"> {/* Added h-full w-full */}
       {/* Left Panel: Component Palette */}
-      <div className="w-60 flex-shrink-0 border-r border-gray-300 overflow-y-auto">
+      <div className="w-60 flex-shrink-0 border-r border-border overflow-y-auto bg-muted/40"> {/* Use theme colors */}
         <ComponentPalette />
       </div>
 
       {/* Center Panel: Canvas */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-         <div className="flex-1 relative bg-gray-200"> {/* Canvas container */}
+      <div className="flex-1 flex flex-col overflow-hidden"> {/* This should grow */}
+         <div className="flex-1 relative bg-background"> {/* Canvas container - Use theme color */}
            <Canvas
              pageStructure={pageStructure}
              // Pass only the first ID for now, or update Canvas to handle array
@@ -74,8 +75,8 @@ const UIEditor: React.FC<UIEditorProps> = ({
       </div>
 
       {/* Right Panel: Properties */}
-      <div className="w-72 flex-shrink-0 border-l border-gray-300 flex flex-col">
-        <div className="flex-1 overflow-y-auto">
+      <div className="w-72 flex-shrink-0 border-l border-border flex flex-col bg-muted/40"> {/* Use theme colors */}
+        <div className="flex-1 overflow-y-auto p-4"> {/* Add padding */}
           <PropertyPanel
             selectedComponent={firstSelectedComponentData}
             onUpdateProps={onUpdateProps}

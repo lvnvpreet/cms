@@ -1,11 +1,10 @@
 import React, { useState, useCallback } from 'react';
-// ActionToolbar removed
-// LayerNavigator removed
-// ComponentPalette, Canvas, PropertyPanel removed, replaced by UIEditor import
-import UIEditor, { ComponentData } from './UIEditor'; // Import main UIEditor and type
-import { nanoid } from 'nanoid'; // For generating unique IDs
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'; // Use shadcn Tabs
+import UIEditor, { ComponentData } from './UIEditor';
+import CodeEditor from './CodeEditor';
+import { nanoid } from 'nanoid';
 
-// Example initial page structure
+// Example initial page structure (remains relevant for UIEditor)
 const initialPageStructure: ComponentData[] = [
   { id: nanoid(), type: 'Card', props: { className: 'm-4 p-4 shadow' }, children: [
     { id: nanoid(), type: 'Button', props: { children: 'Click Me', variant: 'default' }, x: 10, y: 10, zIndex: 1 },
@@ -235,38 +234,46 @@ const EditorInterface: React.FC = () => {
      // 8. updateStructure(newStructure);
   };
 
+  // TODO: Initialize and manage SyncEngine instance here
+  // TODO: Pass relevant state (e.g., pageStructure, activeFileContent) and update handlers
+  //       between UIEditor, CodeEditor, and SyncEngine.
+
   return (
-    <div className="flex flex-col h-screen">
-      {/* ActionToolbar component removed */}
-      {/* <ActionToolbar
-        canUndo={historyIndex > 0}
-        canRedo={historyIndex < history.length - 1}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        canCopy={selectedComponentIds.length > 0} // Updated condition
-        canPaste={false} // TODO: Implement clipboard state
-        canDuplicate={selectedComponentIds.length > 0} // Updated condition
-        onCopy={handleCopy}
-        onPaste={handlePaste}
-        onDuplicate={handleDuplicate}
-        onAlign={handleAlign} // Pass alignment handler
-        onDistribute={handleDistribute} // Pass distribution handler
-        onSave={handleSave}
-        onPreview={handlePreview}
-        // Pass other handlers as needed
-      /> */}
-      {/* Replace individual panels with the main UIEditor component */}
-      <UIEditor
-        pageStructure={pageStructure}
-        selectedComponentIds={selectedComponentIds}
-        onSelectComponent={handleSelectComponent}
-        onDropComponent={handleDropComponent}
-        onMoveComponent={handleMoveComponent}
-        onUpdateProps={handleUpdateProps}
-        // Pass any other necessary props down to UIEditor
-      />
+    <div className="flex flex-col h-screen bg-background text-foreground">
+      {/* TODO: Re-integrate or replace the Toolbar component */}
+      {/* <ActionToolbar ... /> */}
+
+      {/* Main editor area using Tabs */}
+      <Tabs defaultValue="ui" className="flex flex-col flex-grow h-full"> {/* Make Tabs container flex column and grow */}
+        <TabsList className="shrink-0 border-b"> {/* Prevent list from shrinking */}
+          <TabsTrigger value="ui">UI Editor</TabsTrigger>
+          <TabsTrigger value="code">Code Editor</TabsTrigger>
+        </TabsList>
+
+        {/* UI Editor Tab */}
+        {/* Rely on flex-grow and allow scrolling */}
+        <TabsContent value="ui" className="flex-grow overflow-auto"> {/* Removed h-full */}
+           {/* UIEditor should ideally fill this container */}
+           <UIEditor
+             pageStructure={pageStructure}
+             selectedComponentIds={selectedComponentIds}
+             onSelectComponent={handleSelectComponent}
+             onDropComponent={handleDropComponent}
+             onMoveComponent={handleMoveComponent}
+             onUpdateProps={handleUpdateProps}
+             // Pass any other necessary props down to UIEditor
+           />
+        </TabsContent>
+
+        {/* Code Editor Tab */}
+        {/* Rely on flex-grow, let CodeEditor handle internal layout/scroll */}
+        <TabsContent value="code" className="flex-grow p-0 m-0 overflow-hidden"> {/* Removed h-full, relative. Added overflow-hidden */}
+           {/* Ensure CodeEditor component itself fills this container */}
+           <CodeEditor />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
-export default EditorInterface;
+export default EditorInterface; // Ensure only one default export
