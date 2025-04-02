@@ -9,11 +9,9 @@ import { Input } from '@/components/ui/input';   // Assuming path alias works
 // Potentially import state management hooks (e.g., useSelector, useDispatch)
 // Potentially import drag-and-drop library hooks
 // Potentially import types for page structure/components
+import { ItemTypes } from '../dndTypes'; // Import from the new file
 
-// Define ItemTypes for react-dnd and export it
-export const ItemTypes = {
-  COMPONENT: 'component', // Represents a draggable component from the palette or canvas
-};
+// ItemTypes definition removed, now imported from ../dndTypes
 
 // Define types for component data if not imported (consider moving to a types file)
 export interface ComponentData { // Added export
@@ -24,8 +22,8 @@ export interface ComponentData { // Added export
   // Position properties for absolute positioning
   x?: number;
   y?: number;
-  // gridRowEnd?: number;
-  // gridColumnEnd?: number;
+  // Stacking order
+  zIndex?: number;
 }
 
 interface CanvasProps {
@@ -47,6 +45,7 @@ const Canvas: React.FC<CanvasProps> = ({
   onDropComponent,
   onMoveComponent,
 }) => {
+  console.log('Canvas received pageStructure:', pageStructure); // Log received structure
   // State for managing canvas interactions (e.g., zoom, pan - if needed)
   const [zoomLevel, setZoomLevel] = useState(1);
   const canvasRef = useRef<HTMLDivElement>(null); // Ref for the canvas element
@@ -109,6 +108,7 @@ const Canvas: React.FC<CanvasProps> = ({
 
   const renderComponent = (component: ComponentData) => {
     const ActualComponent = getComponentByType(component.type);
+    console.log(`Rendering component ID: ${component.id}, Type: ${component.type}, Found Component:`, !!ActualComponent); // Log component lookup
     const componentRef = useRef<HTMLDivElement>(null); // Ref for the draggable element
 
     // --- Drag Source Setup ---
@@ -186,11 +186,12 @@ const Canvas: React.FC<CanvasProps> = ({
         // Potentially add dynamic styles for zoom/pan
         transform: `scale(${zoomLevel})`,
         // Add background grid pattern if desired
-        backgroundImage: 'linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)',
-        backgroundSize: '20px 20px', // Example grid size
+        // backgroundImage: 'linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)', // Temporarily removed
+        // backgroundSize: '20px 20px', // Example grid size
       }}
       onClick={() => onSelectComponent(null)} // Deselect on canvas click
     >
+      {/* Canvas Area Test div removed */}
       {/* --- Component Rendering --- */}
       {/* Render the component tree */}
       {pageStructure.map(renderComponent)}
