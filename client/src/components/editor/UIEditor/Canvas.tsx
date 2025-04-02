@@ -16,7 +16,7 @@ export const ItemTypes = {
 };
 
 // Define types for component data if not imported (consider moving to a types file)
-interface ComponentData {
+export interface ComponentData { // Added export
   id: string;
   type: string; // e.g., 'Button', 'Card'
   props: Record<string, any>;
