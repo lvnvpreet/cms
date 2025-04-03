@@ -1,6 +1,6 @@
 import React, { useRef } from 'react'; // Import useRef
 import { useDrag } from 'react-dnd';
-import { ItemTypes } from '../dndTypes'; // Import ItemTypes from the new dndTypes file
+import { ItemTypes } from '../../../types'; // Updated import path
 
 // Define the structure for palette items if needed (could be more complex later)
 interface PaletteItem {

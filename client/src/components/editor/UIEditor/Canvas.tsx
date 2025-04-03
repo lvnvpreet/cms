@@ -11,9 +11,9 @@ import ComponentInstance from './ComponentInstance'; // Import the new component
 // Potentially import state management hooks (e.g., useSelector, useDispatch)
 // Potentially import drag-and-drop library hooks
 // Potentially import types for page structure/components
-import { ItemTypes } from '../dndTypes'; // Import from the new file
+import { ItemTypes } from '../../../types'; // Updated import path
 
-// ItemTypes definition removed, now imported from ../dndTypes
+// ItemTypes definition removed, now imported from ../../../types
 
 // Define types for component data if not imported (consider moving to a types file)
 export interface ComponentData { // Added export

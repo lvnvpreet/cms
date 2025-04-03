@@ -14,44 +14,86 @@ interface EditorFile extends FileTab {
   // Add other properties specific to the editor's internal state if necessary
 }
 
+// Props for CodeEditor, including the generated code from UI changes
+interface CodeEditorProps {
+  generatedHtml?: string; // Optional for initial render
+  generatedCss?: string;
+  generatedJs?: string;
+  // Add props for code changes propagating back up if needed
+  // onHtmlChange?: (content: string) => void;
+  // onCssChange?: (content: string) => void;
+  // onJsChange?: (content: string) => void;
+}
+
 interface EditorSettings {
   theme: string;
   fontSize: number;
   // Add other settings
 }
 
-const CodeEditor: React.FC = () => {
+const CodeEditor: React.FC<CodeEditorProps> = ({
+  generatedHtml = '', // Default to empty strings
+  generatedCss = '',
+  generatedJs = '',
+}) => {
   // State Management
-  const [files, setFiles] = useState<EditorFile[]>([]); // Example: fetch initial files
-  const [activeFileId, setActiveFileId] = useState<string | null>(null);
+  // Initialize with default files for generated content
+  const [files, setFiles] = useState<EditorFile[]>([
+    { id: 'gen-html', name: 'index.html', type: 'html', language: 'html', content: generatedHtml || '// Waiting for UI changes...' },
+    { id: 'gen-css', name: 'style.css', type: 'css', language: 'css', content: generatedCss || '/* Waiting for UI changes... */' },
+    { id: 'gen-js', name: 'script.js', type: 'javascript', language: 'javascript', content: generatedJs || '// Waiting for UI changes...' },
+  ]);
+  const [activeFileId, setActiveFileId] = useState<string | null>('gen-html'); // Start with HTML active
   const [editorSettings, setEditorSettings] = useState<EditorSettings>({
     theme: 'vs-dark', // Example setting
     fontSize: 14,
   });
-  // const [errors, setErrors] = useState<CodeError[]>([]); // Removed errors state completely
+  // const [errors, setErrors] = useState<CodeError[]>([]); // Linter/Error state removed
 
-  // Placeholder for SyncEngine integration
-  // const { syncCodeChange, subscribeToUIChanges } = useSyncEngine();
+  // Placeholder for SyncEngine integration (Code -> UI direction)
+  // const { syncCodeChange } = useSyncEngine();
 
-  // Placeholder for global state integration (e.g., Redux, Zustand)
-  // const { activeFileFromStore, updateActiveFileInStore } = useEditorState();
+  // Placeholder for global state integration
 
-  // Fetch initial files (example)
+  // Effect to update file content when generated code props change
   useEffect(() => {
-    // Replace with actual API call or data source
-    // Ensure initial files conform to the extended EditorFile interface (including 'type')
-    const initialFiles: EditorFile[] = [
-      { id: '1', name: 'App.tsx', type: 'typescript', language: 'typescript', content: '// Start coding here' }, // Changed initial content
-      { id: '2', name: 'styles.css', type: 'css', language: 'css', content: 'body { /* Add styles */ }' }, // Changed initial content
-    ];
-    // Cast to EditorFile[] if necessary, depending on how FileTab is defined
-    setFiles(initialFiles as EditorFile[]);
-    if (initialFiles.length > 0) {
-      setActiveFileId(initialFiles[0].id);
-    }
-  }, []);
+    setFiles(prevFiles => {
+      const updatedFiles = [...prevFiles];
+      const htmlFileIndex = updatedFiles.findIndex(f => f.id === 'gen-html');
+      const cssFileIndex = updatedFiles.findIndex(f => f.id === 'gen-css');
+      const jsFileIndex = updatedFiles.findIndex(f => f.id === 'gen-js');
 
-  // Handle file switching
+      if (htmlFileIndex !== -1 && updatedFiles[htmlFileIndex].content !== generatedHtml) {
+        updatedFiles[htmlFileIndex] = { ...updatedFiles[htmlFileIndex], content: generatedHtml };
+      } else if (htmlFileIndex === -1) {
+        // Add if missing (shouldn't happen with initial state, but good practice)
+        updatedFiles.push({ id: 'gen-html', name: 'index.html', type: 'html', language: 'html', content: generatedHtml });
+      }
+
+      if (cssFileIndex !== -1 && updatedFiles[cssFileIndex].content !== generatedCss) {
+        updatedFiles[cssFileIndex] = { ...updatedFiles[cssFileIndex], content: generatedCss };
+      } else if (cssFileIndex === -1) {
+        updatedFiles.push({ id: 'gen-css', name: 'style.css', type: 'css', language: 'css', content: generatedCss });
+      }
+
+      if (jsFileIndex !== -1 && updatedFiles[jsFileIndex].content !== generatedJs) {
+        updatedFiles[jsFileIndex] = { ...updatedFiles[jsFileIndex], content: generatedJs };
+      } else if (jsFileIndex === -1) {
+        updatedFiles.push({ id: 'gen-js', name: 'script.js', type: 'javascript', language: 'javascript', content: generatedJs });
+      }
+
+      // If no file was active and we just added files, activate the HTML one
+      if (!activeFileId && updatedFiles.length > 0) {
+          const htmlIdx = updatedFiles.findIndex(f => f.id === 'gen-html');
+          if (htmlIdx !== -1) setActiveFileId(updatedFiles[htmlIdx].id);
+      }
+
+
+      return updatedFiles;
+    });
+  }, [generatedHtml, generatedCss, generatedJs, activeFileId]); // Rerun when generated code changes
+
+    // Handle file switching
   const handleSelectFile = useCallback((fileId: string) => {
     // Save current editor state (cursor, selection) before switching
     const currentFileIndex = files.findIndex(f => f.id === activeFileId);

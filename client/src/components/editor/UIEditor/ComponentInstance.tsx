@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useDrag } from 'react-dnd';
-import { ItemTypes } from '../dndTypes'; // Import common DND types
+import { ItemTypes } from '../../../types'; // Updated import path
 import { ComponentData } from './Canvas'; // Import ComponentData type (assuming it's exported from Canvas or a types file)
 
 // Import the actual UI components that can be rendered
