@@ -6,7 +6,7 @@ import { history, defaultKeymap, historyKeymap } from '@codemirror/commands';
 import { indentOnInput, syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
 import { closeBrackets, autocompletion, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
-import { linter, lintGutter, lintKeymap, Diagnostic } from "@codemirror/lint"; // Import Diagnostic type
+// import { linter, lintGutter, lintKeymap, Diagnostic } from "@codemirror/lint"; // Remove lint imports
 
 import { getSyntaxHighlightingExtension } from './SyntaxHighlighter';
 import { CodeError } from './ErrorDisplay'; // Import CodeError from ErrorDisplay
@@ -50,11 +50,10 @@ const CodePanel: React.FC<CodePanelProps> = ({
   }, [onChange, onError, language, fileId]);
 
   // TODO: Implement a proper linter source based on language
-  // This is a placeholder showing how to integrate the linter extension
-  const myLinter = linter(view => {
+  // const myLinter = linter(view => { // Comment out linter function
     // Replace with actual linting logic (e.g., using ESLint, stylelint, etc.)
     // For now, return empty diagnostics to remove the console.log warning
-    let diagnostics: Diagnostic[] = []; // Explicitly type diagnostics array
+    // let diagnostics: Diagnostic[] = []; // Explicitly type diagnostics array
     // if (language === 'javascript' || language === 'typescript') {
     //   // Example: Find console.log statements (very basic)
     //   const matches = view.state.doc.toString().matchAll(/console\.log/g);
@@ -71,26 +70,10 @@ const CodePanel: React.FC<CodePanelProps> = ({
     //       }
     //   }
     // }
-    // Call onError callback with the found diagnostics (which will be empty for now)
-    if (onError) {
-        // Ensure onError is called even with empty diagnostics
-        const formattedErrors: CodeError[] = diagnostics.map((d, index) => {
-            const line = view.state.doc.lineAt(d.from);
-            return {
-                id: `${fileId}-err-${index}-${d.from}`, // Generate a unique ID
-                message: d.message,
-                severity: d.severity as 'warning' | 'error', // Ensure severity matches ErrorDisplay's type
-                line: line.number,
-                column: d.from - line.from, // Calculate column within the line
-                source: 'codemirror-linter' // Example source
-            };
-        });
-        // Always call onError, even if diagnostics is empty, to clear previous errors
-        onError(formattedErrors);
-    }
+    // Removed the if(onError) block as diagnostics variable is no longer available
     // Always return empty diagnostics for now
-    return []; // Explicitly return empty array
-  });
+    // return []; // Explicitly return empty array
+  // }); // Comment out linter function
 
   // Memoize extensions to avoid re-creating them on every render
   const editorExtensions = useMemo(() => {
@@ -126,24 +109,26 @@ const CodePanel: React.FC<CodePanelProps> = ({
           ...searchKeymap,
           ...historyKeymap,
           ...completionKeymap,
-          ...lintKeymap
+          // ...lintKeymap // Remove lint keymap
       ]),
       // Existing extensions
-      lintGutter(),
+      // lintGutter(), // Remove lint gutter
       getSyntaxHighlightingExtension(language), // Language specific syntax highlighting
       dynamicTheme, // Custom theme adjustments
-      myLinter, // Add the linter
+      // myLinter, // Remove linter
       // TODO: Add keymaps, theme extensions based on props
     ];
     return extensions; // Return the typed array
-  }, [language, fontSize, myLinter]); // Add myLinter to dependencies
+  }, [language, fontSize]); // Remove myLinter from dependencies
 
   return (
-    // Ensure CodeMirror fills its container
-    <div className="h-full w-full overflow-hidden">
+    // Ensure CodeMirror fills its container - Add border for debugging
+    <div className="h-full w-full overflow-hidden border-2 border-lime-500">
       <CodeMirror
         value={content} // Use content prop
         height="100%" // Ensure it takes full height
+        minHeight="100%" // Explicitly set minHeight
+        style={{ height: '100%' }} // Add inline style as fallback
         extensions={editorExtensions}
         onChange={handleCodeChange} // Use memoized handler
         // theme={theme} // Pass theme prop if using a CodeMirror theme extension

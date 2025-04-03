@@ -244,32 +244,36 @@ const EditorInterface: React.FC = () => {
       {/* <ActionToolbar ... /> */}
 
       {/* Main editor area using Tabs */}
-      <Tabs defaultValue="ui" className="flex flex-col flex-grow h-full"> {/* Make Tabs container flex column and grow */}
+      <Tabs defaultValue="ui" className="flex flex-col flex-grow h-full"> {/* Added h-full back */}
         <TabsList className="shrink-0 border-b"> {/* Prevent list from shrinking */}
           <TabsTrigger value="ui">UI Editor</TabsTrigger>
           <TabsTrigger value="code">Code Editor</TabsTrigger>
         </TabsList>
 
         {/* UI Editor Tab */}
-        {/* Rely on flex-grow and allow scrolling */}
-        <TabsContent value="ui" className="flex-grow overflow-auto"> {/* Removed h-full */}
-           {/* UIEditor should ideally fill this container */}
-           <UIEditor
-             pageStructure={pageStructure}
-             selectedComponentIds={selectedComponentIds}
-             onSelectComponent={handleSelectComponent}
-             onDropComponent={handleDropComponent}
-             onMoveComponent={handleMoveComponent}
-             onUpdateProps={handleUpdateProps}
-             // Pass any other necessary props down to UIEditor
-           />
+        {/* Revert to flex-grow */}
+        <TabsContent value="ui" className="flex-grow overflow-auto min-h-0">
+           {/* Add h-full to wrapper */}
+           <div className="h-full">
+             <UIEditor
+               pageStructure={pageStructure}
+               selectedComponentIds={selectedComponentIds}
+               onSelectComponent={handleSelectComponent}
+               onDropComponent={handleDropComponent}
+               onMoveComponent={handleMoveComponent}
+               onUpdateProps={handleUpdateProps}
+               // Pass any other necessary props down to UIEditor
+             />
+           </div>
         </TabsContent>
 
         {/* Code Editor Tab */}
-        {/* Rely on flex-grow, let CodeEditor handle internal layout/scroll */}
-        <TabsContent value="code" className="flex-grow p-0 m-0 overflow-hidden"> {/* Removed h-full, relative. Added overflow-hidden */}
-           {/* Ensure CodeEditor component itself fills this container */}
-           <CodeEditor />
+        {/* Revert to flex-grow */}
+        <TabsContent value="code" className="flex-grow p-0 m-0 overflow-hidden min-h-0">
+           {/* Add h-full to wrapper */}
+           <div className="h-full">
+             <CodeEditor />
+           </div>
         </TabsContent>
       </Tabs>
     </div>

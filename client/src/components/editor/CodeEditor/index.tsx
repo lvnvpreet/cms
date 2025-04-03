@@ -28,7 +28,7 @@ const CodeEditor: React.FC = () => {
     theme: 'vs-dark', // Example setting
     fontSize: 14,
   });
-  const [errors, setErrors] = useState<CodeError[]>([]); // Use CodeError type
+  // const [errors, setErrors] = useState<CodeError[]>([]); // Removed errors state completely
 
   // Placeholder for SyncEngine integration
   // const { syncCodeChange, subscribeToUIChanges } = useSyncEngine();
@@ -41,8 +41,8 @@ const CodeEditor: React.FC = () => {
     // Replace with actual API call or data source
     // Ensure initial files conform to the extended EditorFile interface (including 'type')
     const initialFiles: EditorFile[] = [
-      { id: '1', name: 'App.tsx', type: 'typescript', language: 'typescript', content: 'console.log("Hello");' }, // Added 'type'
-      { id: '2', name: 'styles.css', type: 'css', language: 'css', content: 'body { color: red; }' }, // Added 'type'
+      { id: '1', name: 'App.tsx', type: 'typescript', language: 'typescript', content: '// Start coding here' }, // Changed initial content
+      { id: '2', name: 'styles.css', type: 'css', language: 'css', content: 'body { /* Add styles */ }' }, // Changed initial content
     ];
     // Cast to EditorFile[] if necessary, depending on how FileTab is defined
     setFiles(initialFiles as EditorFile[]);
@@ -79,23 +79,14 @@ const CodeEditor: React.FC = () => {
     );
     // TODO: Debounce this call
     // syncCodeChange(activeFileId, newContent); // Sync with SyncEngine
+
+    // Removed setErrors([]) call
+
   }, [activeFileId /*, syncCodeChange */]);
 
+  // Removed handleErrors function as linter is disabled
 
-  // Handle errors from CodePanel/linter (receives CodeError[])
-  const handleErrors = useCallback((newErrors: CodeError[]) => {
-    console.log("Received errors from CodePanel:", newErrors); // Add console log
-    // Ensure state is updated even if newErrors is empty
-    setErrors(newErrors);
-    // Also update the hasErrors flag on the specific file
-    if (activeFileId) {
-       setFiles(prevFiles =>
-         prevFiles.map(file =>
-           file.id === activeFileId ? { ...file, hasErrors: newErrors.length > 0 } : file
-         )
-       );
-    }
-  }, [activeFileId]);
+  // Removed useEffect for clearing errors
 
   // Effect for SyncEngine UI changes subscription (placeholder)
   useEffect(() => {
@@ -130,9 +121,8 @@ const CodeEditor: React.FC = () => {
 
   return (
     // Ensure the main container is flex column and takes full height/width
-    <div className="flex flex-col h-full w-full bg-background"> {/* Removed debug border */}
+    <div className="flex flex-col h-full w-full bg-background"> {/* Add h-full back */}
       {/* File Tabs */}
-      {/* Removed wrapper div and border */}
         <FileTabs
           files={files.map(f => ({ id: f.id, name: f.name, type: f.type, language: f.language, isModified: f.isModified, hasErrors: f.hasErrors }))}
           activeFileId={activeFileId}
@@ -143,17 +133,17 @@ const CodeEditor: React.FC = () => {
         />
       {/* Removed wrapper div */}
 
-      {/* Container for CodePanel and ErrorDisplay - Should grow and handle overflow */}
-      <div className="flex flex-col flex-grow overflow-hidden h-full"> {/* Keep h-full */}
-        {/* Code Panel */}
-        <div className="flex-grow overflow-auto h-full"> {/* Removed debug border, keep h-full */}
+      {/* Container for CodePanel and ErrorDisplay - Simplify flex, add min-h-0 */}
+      <div className="flex flex-col flex-grow overflow-hidden min-h-0">
+        {/* Code Panel - Remove overflow-auto, let CodeMirror handle scroll */}
+        <div className="flex-grow"> {/* Removed overflow-auto */}
           {activeFile ? (
             <CodePanel
               fileId={activeFile.id}
               language={activeFile.language} // Pass language for syntax highlighting
               content={activeFile.content} // Pass current content
               onChange={handleCodeChange} // Pass updated handler
-              onError={handleErrors} // Pass updated handler
+              // onError={handleErrors} // Removed onError prop
               // Pass editor settings and initial state
               theme={editorSettings.theme}
               fontSize={editorSettings.fontSize}
@@ -167,17 +157,16 @@ const CodeEditor: React.FC = () => {
           )}
         </div>
 
-        {/* Error Display - Conditionally render with Resizable */}
-        {errors.length > 0 && (
+        {/* Error Display - Completely removed for debugging */}
+        {/* {errors.length > 0 && (
            <Resizable
-             defaultSize={{ width: '100%', height: '100px' }} // Initial size
+             defaultSize={{ width: '100%', height: '100px' }}
              minHeight={50}  // Min height when resizing
              maxHeight={300} // Max height when resizing
              enable={{ top: true, right: false, bottom: false, left: false, topRight: false, bottomRight: false, bottomLeft: false, topLeft: false }} // Only allow resizing from top handle
-             className="shrink-0 border-t border-border" // Prevent shrinking, add border
+             className="shrink-0 border-t border-border"
            >
-             {/* ErrorDisplay should fill the Resizable container */}
-            <ErrorDisplay
+             <ErrorDisplay
               errors={errors}
               onNavigate={(line, column) => {
                 // TODO: Implement navigation logic in CodePanel/CodeMirror instance
@@ -185,7 +174,7 @@ const CodeEditor: React.FC = () => {
               }}
             />
           </Resizable>
-        )}
+        )} */}
       </div>
 
       {/* TODO: Add status bar, settings controls, etc. */}
