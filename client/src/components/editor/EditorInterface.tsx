@@ -5,6 +5,9 @@ import UIEditor from './UIEditor'; // Assuming UIEditor handles VisualComponent[
 import CodeEditor from './CodeEditor';
 import { nanoid } from 'nanoid';
 import { VisualComponent, GeneratedCode, ComponentProps } from '../../types'; // Use types from centralized file
+// Import eventBus (assuming SyncEngine/index.ts exports it or we import directly)
+import { eventBus } from './SyncEngine/EventBus';
+// Keep transformUIToCode for initial/direct generation if needed, but sync handles updates
 import { transformUIToCode } from './SyncEngine/UIToCode';
 
 // Example initial page structure using VisualComponent type
@@ -44,9 +47,12 @@ const EditorInterface: React.FC = () => {
   const [generatedCss, setGeneratedCss] = useState<string>('');
   const [generatedJs, setGeneratedJs] = useState<string>('');
 
-  // --- Core Update Function (triggers code generation) ---
-  const updateStructure = useCallback((newStructure: VisualComponent[], updateHistory = true) => {
-    if (updateHistory) {
+  // --- Core Update Function (now primarily updates state, event triggers sync) ---
+  const updateStructure = useCallback((newStructure: VisualComponent[], updateHistory = true, source: 'internal' | 'sync' = 'internal') => {
+    // Prevent updates originating from sync from re-triggering sync
+    const isInternalChange = source === 'internal';
+
+    if (updateHistory && isInternalChange) {
       const newHistory = history.slice(0, historyIndex + 1);
       newHistory.push(newStructure);
       setHistory(newHistory);
@@ -54,38 +60,84 @@ const EditorInterface: React.FC = () => {
     }
     setPageStructure(newStructure);
 
-    // --- Trigger Code Generation ---
-    const rootNode: VisualComponent = {
-      id: 'canvas-root',
-      type: 'div',
-      props: { id: 'main-content-area' },
-      children: newStructure,
-    };
+    // Code generation is now handled by SyncEngine triggered by the 'ui:change' event
+    // We remove the direct call to transformUIToCode here.
 
-    try {
-      const { html, css, javascript }: GeneratedCode = transformUIToCode(rootNode);
-      setGeneratedHtml(html);
-      setGeneratedCss(css);
-      setGeneratedJs(javascript);
-      console.log("Code generated successfully after structure update.");
-    } catch (error) {
-      console.error("Error during UI to Code transformation:", error);
-    }
+    // If the change was internal (user action), publish the event
+    // if (isInternalChange) {
+    //   // Publishing moved to useEffect hook below to ensure state is updated first
+    // }
+
   }, [history, historyIndex]); // Dependencies for useCallback
 
-  // --- Initial Code Generation ---
+  // --- Publish UI Changes via Event Bus ---
   useEffect(() => {
-    // Generate code for the initial structure on mount
-    updateStructure(initialPageStructure, false); // Don't update history on initial load
+    // This effect runs whenever pageStructure changes *after* the initial render
+    // We check if it's not the initial structure to avoid publishing on mount
+    if (pageStructure !== initialPageStructure) {
+        console.log('[EditorInterface] Publishing ui:change event');
+        eventBus.publish('ui:change', { componentTree: pageStructure });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once
+  }, [pageStructure]); // Triggered by pageStructure changes
+
+  // --- Subscribe to Sync Engine Updates & Initial Code Gen ---
+  useEffect(() => {
+    // Generate code for the initial structure on mount (using direct call)
+    const rootNode: VisualComponent = {
+      id: 'canvas-root-initial', type: 'div', props: {}, children: initialPageStructure
+    };
+    try {
+       // Destructure, providing default for optional javascript
+       const { html, css, javascript, eventHandlers } = transformUIToCode(rootNode);
+       setGeneratedHtml(html);
+       setGeneratedCss(css);
+       setGeneratedJs(javascript || ''); // Provide default empty string
+       // TODO: Store or handle eventHandlers if needed by the editor/preview
+       console.log("Initial code generated. Handlers:", eventHandlers ? Object.keys(eventHandlers).length : 0);
+     } catch (error) {
+       console.error("Error during initial UI to Code transformation:", error);
+    }
+
+    // Subscribe to updates from SyncEngine
+    console.log('[EditorInterface] Subscribing to sync engine events');
+    const unsubscribeUiUpdated = eventBus.subscribe('ui:updated', (payload: any) => {
+      console.log('[EditorInterface] Received ui:updated event', payload);
+      if (payload && payload.componentTree) {
+        // Update structure without adding to history and mark as from 'sync'
+        updateStructure(payload.componentTree, false, 'sync');
+        setSelectedComponentIds([]); // Clear selection on external update
+      }
+    });
+
+    const unsubscribeCodeUpdated = eventBus.subscribe('code:updated', (payload: any) => {
+        console.log('[EditorInterface] Received code:updated event', payload);
+        if (payload && typeof payload.code === 'string') {
+            // Assuming payload.code contains the HTML for now
+            // TODO: Handle CSS and JS updates if SyncEngine provides them separately
+            setGeneratedHtml(payload.code);
+            // Potentially clear CSS/JS or handle them based on SyncEngine output
+            // setGeneratedCss('');
+            // setGeneratedJs('');
+        }
+    });
+
+    // Cleanup function
+    return () => {
+      console.log('[EditorInterface] Unsubscribing from sync engine events');
+      unsubscribeUiUpdated();
+      unsubscribeCodeUpdated();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updateStructure]); // Include updateStructure in dependency array
 
   // --- History Handlers ---
   const handleUndo = useCallback(() => {
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
       setHistoryIndex(newIndex);
-      updateStructure(history[newIndex], false); // Update structure without adding to history
+      // Update structure without adding to history and mark as internal (undo/redo are user actions)
+      updateStructure(history[newIndex], false, 'internal');
       setSelectedComponentIds([]);
     }
   }, [history, historyIndex, updateStructure]);
@@ -94,7 +146,8 @@ const EditorInterface: React.FC = () => {
     if (historyIndex < history.length - 1) {
       const newIndex = historyIndex + 1;
       setHistoryIndex(newIndex);
-      updateStructure(history[newIndex], false); // Update structure without adding to history
+      // Update structure without adding to history and mark as internal
+      updateStructure(history[newIndex], false, 'internal');
       setSelectedComponentIds([]);
     }
   }, [history, historyIndex, updateStructure]);
@@ -120,7 +173,7 @@ const EditorInterface: React.FC = () => {
 
   const handleUpdateProps = useCallback((componentId: string, newProps: Partial<ComponentProps>) => {
     const updatedStructure = findAndUpdatePropsRecursive(pageStructure, componentId, newProps);
-    updateStructure(updatedStructure);
+    updateStructure(updatedStructure, true, 'internal'); // Mark as internal change
   }, [pageStructure, updateStructure]);
 
   // Recursive helper to update position
@@ -138,7 +191,7 @@ const EditorInterface: React.FC = () => {
 
    const handleMoveComponent = useCallback((componentId: string, newPosition: { x: number; y: number }) => {
      const updatedStructure = findAndUpdatePositionRecursive(pageStructure, componentId, newPosition);
-     updateStructure(updatedStructure);
+     updateStructure(updatedStructure, true, 'internal'); // Mark as internal change
    }, [pageStructure, updateStructure]);
 
   const handleDropComponent = useCallback((item: { type: string; id?: string }, position: { x: number; y: number }) => {
@@ -160,7 +213,7 @@ const EditorInterface: React.FC = () => {
       zIndex: (pageStructure.reduce((maxZ, c) => Math.max(maxZ, c.zIndex || 0), 0) + 1),
     };
     const updatedStructure = [...pageStructure, newComponent];
-    updateStructure(updatedStructure);
+    updateStructure(updatedStructure, true, 'internal'); // Mark as internal change
     // Optionally select the newly added component
     // handleSelectComponent(newComponent.id);
   }, [pageStructure, updateStructure, handleMoveComponent]);
@@ -180,6 +233,29 @@ const EditorInterface: React.FC = () => {
   const firstSelectedComponentData = selectedComponentIds.length > 0
     ? findComponentByIdRecursive(pageStructure, selectedComponentIds[0])
     : null;
+
+  // --- Code Change Handlers (Placeholders) ---
+  const handleHtmlChange = useCallback((newHtml: string) => {
+    console.log('[EditorInterface] HTML changed (placeholder)');
+    setGeneratedHtml(newHtml); // Update local state immediately for responsiveness
+    // TODO: Debounce this call
+    eventBus.publish('code:change', { code: newHtml, language: 'html' }); // Publish change
+  }, []);
+
+  const handleCssChange = useCallback((newCss: string) => {
+    console.log('[EditorInterface] CSS changed (placeholder)');
+    setGeneratedCss(newCss);
+    // TODO: Debounce this call
+    eventBus.publish('code:change', { code: newCss, language: 'css' }); // Publish change
+  }, []);
+
+  const handleJsChange = useCallback((newJs: string) => {
+    console.log('[EditorInterface] JS changed (placeholder)');
+    setGeneratedJs(newJs);
+    // TODO: Debounce this call
+    eventBus.publish('code:change', { code: newJs, language: 'javascript' }); // Publish change
+  }, []);
+
 
   // --- Toolbar Action Placeholders ---
   const handleSave = () => console.log('Save action triggered', pageStructure);
@@ -224,13 +300,13 @@ const EditorInterface: React.FC = () => {
            <div className="h-full w-full"> {/* Ensure inner div takes full space */}
              <CodeEditor
                 // Pass the generated code strings as new props
-                generatedHtml={generatedHtml}
-                generatedCss={generatedCss}
-                generatedJs={generatedJs}
-                // TODO: Add onChange handlers to enable Code-to-UI sync
-                // onHtmlChange={handleHtmlChange}
-                // onCssChange={handleCssChange}
-                // onJsChange={handleJsChange}
+                 generatedHtml={generatedHtml}
+                 generatedCss={generatedCss}
+                 generatedJs={generatedJs}
+                 // Pass onChange handlers to enable Code-to-UI sync
+                 onHtmlChange={handleHtmlChange}
+                 onCssChange={handleCssChange}
+                 onJsChange={handleJsChange}
              />
            </div>
         </TabsContent>

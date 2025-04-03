@@ -1,19 +1,19 @@
 // client/src/components/editor/SyncEngine/UIToCode.ts
-import { VisualComponent, GeneratedCode, ComponentProps } from '../../../types'; // Import types
+import { VisualComponent, GeneratedCode, ComponentProps, EventHandlerCollection } from '../../../types'; // Import types, Add EventHandlerCollection
 
 /**
  * Converts a single visual component node into its code representation.
  * This function will need to handle different component types and their specific transformations.
  * @param component The visual component to convert.
  * @param component The visual component to convert.
- * @param cssCollector A function to collect CSS rules during traversal.
- * @param jsCollector A function to collect JS snippets during traversal.
+ * @param cssCollector A function to collect CSS rules.
+ * @param handlerCollector A function to collect event handlers and assign IDs.
  * @returns A string representation of the component in code (e.g., HTML).
  */
 function convertComponentToCode(
   component: VisualComponent,
-  cssCollector: (id: string, styles: ComponentProps['style']) => void, // Use ComponentProps['style']
-  jsCollector: (id: string, event: string, handler: Function) => void // Keep Function for now, refine later
+  cssCollector: (id: string, styles: ComponentProps['style']) => void,
+  handlerCollector: (componentId: string, eventProp: string, handlerFunc: Function) => string // Returns handler ID
 ): string {
   // TODO: Implement more sophisticated component-specific conversion logic
   const tagName = component.type.toLowerCase();
@@ -39,11 +39,10 @@ function convertComponentToCode(
           attributes += ` style="${styleString}"`;
       }
     } else if (key.startsWith('on') && typeof value === 'function') {
-      // Collect event handlers for JS generation
-      const eventName = key.toLowerCase(); // e.g., onclick
-      jsCollector(componentId, eventName, value);
-      // Add a marker attribute, actual binding happens in JS
-      attributes += ` data-event-${eventName}="true"`;
+      // Collect event handlers and get a unique ID for them
+      const handlerId = handlerCollector(componentId, key, value);
+      // Add a data attribute referencing the handler ID
+      attributes += ` data-handler-${key.toLowerCase()}="${handlerId}"`; // e.g., data-handler-onclick="handler-click-xyz"
     } else if (typeof value === 'boolean') {
       // Add boolean attributes like 'disabled', 'checked' if true
       if (value) attributes += ` ${key}`;
@@ -63,10 +62,10 @@ function convertComponentToCode(
   // Otherwise, process the children array recursively
   else if (Array.isArray(component.children)) {
     innerContent = component.children
-      .map(child => convertComponentToCode(child, cssCollector, jsCollector))
+      .map(child => convertComponentToCode(child, cssCollector, handlerCollector)) // Pass handlerCollector
       .join('\n');
   }
-  // Note: We might need to handle cases where props.children is a ReactNode but not string/number
+  // Note: We might need to handle cases where props.children is a ReactNode but not string/number or array
 
   // Handle self-closing tags
   const selfClosingTags = ['img', 'input', 'br', 'hr', 'meta', 'link'];
@@ -82,34 +81,39 @@ function convertComponentToCode(
 /**
  * Traverses the visual component tree and generates the corresponding code.
  * @param componentTree The root of the visual component tree.
- * @returns An object containing the generated HTML, CSS, and JavaScript code.
+ * @returns An object containing the generated HTML, CSS, and a map of event handlers.
  */
 export function transformUIToCode(componentTree: VisualComponent): GeneratedCode {
   console.log('Starting UI to Code transformation...');
-  // Use more specific types for collectors based on ComponentProps
   const collectedCSS: { [id: string]: ComponentProps['style'] } = {};
-  const collectedJS: { id: string; event: string; handler: Function }[] = []; // Keep Function for now
+  const collectedHandlers: EventHandlerCollection = {}; // Use the imported type
+  let handlerCounter = 0; // Simple counter for unique handler IDs
 
   const cssCollector = (id: string, styles: ComponentProps['style']) => {
-    if (styles && Object.keys(styles).length > 0) { // Only collect if there are styles
+    if (styles && Object.keys(styles).length > 0) {
         collectedCSS[id] = { ...(collectedCSS[id] || {}), ...styles };
     }
   };
 
-  const jsCollector = (id: string, event: string, handler: Function) => {
-    collectedJS.push({ id, event, handler });
+  // Collects handler, assigns ID, returns ID
+  const handlerCollector = (componentId: string, eventProp: string, handlerFunc: Function): string => {
+      handlerCounter++;
+      const handlerId = `handler-${eventProp.toLowerCase().substring(2)}-${componentId}-${handlerCounter}`; // e.g., handler-click-comp123-1
+      collectedHandlers[handlerId] = handlerFunc;
+      return handlerId;
   };
 
-  // 1. Traverse the component tree and convert each component, collecting CSS/JS info
-  const generatedHtml = convertComponentToCode(componentTree, cssCollector, jsCollector);
+  // 1. Traverse the component tree and convert each component, collecting CSS and Handlers
+  const generatedHtml = convertComponentToCode(componentTree, cssCollector, handlerCollector);
 
-  // TODO: 2. Apply component-specific transformations (e.g., mapping React components to HTML)
+  // TODO: 2. Apply component-specific transformations (e.g., mapping React components to HTML) - Still needed for React components
 
   // 3. Assemble the code
   //    - Generate CSS
-  //    - Generate JS
-  //    - Address challenge: Preserving custom code modifications (requires diffing/merging - complex)
-  //    - Address challenge: Maintaining proper code organization (e.g., separate files)
+  //    - Generate CSS (Done)
+  //    - Package Handlers (Done)
+  //    - Address challenge: Preserving custom code modifications (requires diffing/merging - complex) - Still needed
+  //    - Address challenge: Maintaining proper code organization (e.g., separate files) - Still needed
 
   // CSS Generation
   let generatedCss = '/* Generated CSS */\n';
@@ -123,32 +127,17 @@ export function transformUIToCode(componentTree: VisualComponent): GeneratedCode
     generatedCss += `[data-component-id="${id}"] {\n${styleString}\n}\n\n`;
   }
 
-  // JS Generation (Placeholder - Needs significant improvement)
-  let generatedJs = '// Generated JavaScript (Basic Event Binding)\n';
-  generatedJs += 'document.addEventListener("DOMContentLoaded", () => {\n';
-  collectedJS.forEach(({ id, event }) => {
-    // WARNING: This is a placeholder. Real implementation needs a way to map
-    // these events back to actual functions defined perhaps in a separate script
-    // or injected context. Directly embedding functions is not feasible/safe.
-    generatedJs += `  const el_${id.replace(/-/g, '_')} = document.querySelector('[data-component-id="${id}"]');\n`; // Sanitize id for variable name
-    generatedJs += `  if (el_${id.replace(/-/g, '_')}) {\n`;
-    const eventType = event.substring(2); // Remove "on" prefix
-    generatedJs += `    el_${id.replace(/-/g, '_')}.addEventListener('${eventType}', (e) => {\n`;
-    generatedJs += `      console.log('Event "${eventType}" triggered on element ${id}');\n`;
-    generatedJs += `      // Placeholder for actual handler logic associated with ${id}\n`;
-    generatedJs += `    });\n`;
-    generatedJs += `  }\n`;
-  });
-  generatedJs += '});\n';
-
+  // JS Generation is removed - we now return the handler map instead.
+  // The runtime environment is responsible for attaching these handlers.
 
   const generatedCode: GeneratedCode = {
     html: generatedHtml,
-    css: generatedCss.trim() ? generatedCss : '/* No CSS generated */', // Handle empty CSS
-    javascript: generatedJs.trim() ? generatedJs : '// No JavaScript generated', // Handle empty JS
+    css: generatedCss.trim() ? generatedCss : '/* No CSS generated */',
+    // javascript: '', // Remove generated JS string
+    eventHandlers: collectedHandlers, // Add the collected handlers map
   };
 
-  console.log('UI to Code transformation complete.');
+  console.log('UI to Code transformation complete. Handlers collected:', Object.keys(collectedHandlers).length);
   return generatedCode;
 }
 

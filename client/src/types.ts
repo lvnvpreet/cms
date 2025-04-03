@@ -55,7 +55,28 @@ export interface VisualComponent {
 export interface GeneratedCode {
   html: string;
   css: string;
-  javascript: string;
+  javascript?: string; // Make optional as it might not always be generated
+  eventHandlers?: EventHandlerCollection; // Add mapping for handlers
 }
+
+/**
+ * Represents a collection of event handlers mapped by unique IDs.
+ * The key is the handler ID (e.g., "handler-click-comp123-1"),
+ * and the value is the actual function reference.
+ */
+export type EventHandlerCollection = {
+  [handlerId: string]: Function; // Using Function type for now, refine if needed
+};
+
+// --- Code File Representation ---
+/**
+ * Represents a single code file being processed or managed.
+ */
+export interface CodeFile {
+  path: string; // Relative path of the file
+  content: string; // The textual content of the file
+  language: 'html' | 'css' | 'javascript' | 'typescript'; // Language identifier
+}
+
 
 // Add other shared types/interfaces for the client application here

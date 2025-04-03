@@ -19,10 +19,10 @@ interface CodeEditorProps {
   generatedHtml?: string; // Optional for initial render
   generatedCss?: string;
   generatedJs?: string;
-  // Add props for code changes propagating back up if needed
-  // onHtmlChange?: (content: string) => void;
-  // onCssChange?: (content: string) => void;
-  // onJsChange?: (content: string) => void;
+  // Add props for code changes propagating back up
+  onHtmlChange?: (content: string) => void;
+  onCssChange?: (content: string) => void;
+  onJsChange?: (content: string) => void;
 }
 
 interface EditorSettings {
@@ -35,6 +35,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   generatedHtml = '', // Default to empty strings
   generatedCss = '',
   generatedJs = '',
+  // Destructure the new props
+  onHtmlChange,
+  onCssChange,
+  onJsChange,
 }) => {
   // State Management
   // Initialize with default files for generated content
@@ -119,12 +123,31 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         file.id === activeFileId ? { ...file, content: newContent, isModified: true } : file // Mark as modified
       )
     );
-    // TODO: Debounce this call
-    // syncCodeChange(activeFileId, newContent); // Sync with SyncEngine
+
+    // Find the active file using the current 'files' state
+    const activeFile = files.find(f => f.id === activeFileId); // Use 'files' state here
+
+    // Call the appropriate onChange prop based on the active file's language
+    if (activeFile) {
+        switch (activeFile.language) {
+            case 'html':
+                onHtmlChange?.(newContent);
+                break;
+            case 'css':
+                onCssChange?.(newContent);
+                break;
+            case 'javascript': // Assuming 'javascript' is the language type for JS files
+            case 'typescript': // Handle TS if needed
+                onJsChange?.(newContent);
+                break;
+            default:
+                console.warn(`Code change in unsupported language: ${activeFile.language}`);
+        }
+    }
 
     // Removed setErrors([]) call
 
-  }, [activeFileId /*, syncCodeChange */]);
+  }, [activeFileId, onHtmlChange, onCssChange, onJsChange]); // Add new props to dependency array
 
   // Removed handleErrors function as linter is disabled
 
