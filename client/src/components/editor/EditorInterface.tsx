@@ -1,11 +1,16 @@
 // client/src/components/editor/EditorInterface.tsx
 import React, { useState, useCallback, useEffect } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import UIEditor from './UIEditor';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Removed TabsContent
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+// Import the specific UI components instead of the wrapper
+import ComponentLibrary from './ComponentLibrary';
+import Canvas from './UIEditor/Canvas'; // Assuming path is correct
+import PropertyPanel from './UIEditor/PropertyPanel'; // Assuming path is correct
 import CodeEditor from './CodeEditor';
-import TemplatesInterface from './Templates'; // Import the Templates interface
+import TemplatesInterface from './Templates';
+import Toolbar from './Toolbar';
 import { nanoid } from 'nanoid';
-import { VisualComponent, GeneratedCode, ComponentProps } from '../../types'; // Use types from centralized file
+import { VisualComponent, ComponentProps } from '../../types';
 // Import eventBus (assuming SyncEngine/index.ts exports it or we import directly)
 import { eventBus } from './SyncEngine/EventBus';
 // Keep transformUIToCode for initial/direct generation if needed, but sync handles updates
@@ -143,15 +148,9 @@ const EditorInterface: React.FC = () => {
     }
   }, [history, historyIndex, updateStructure]);
 
-  const handleRedo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const newIndex = historyIndex + 1;
-      setHistoryIndex(newIndex);
-      // Update structure without adding to history and mark as internal
-      updateStructure(history[newIndex], false, 'internal');
-      setSelectedComponentIds([]);
-    }
-  }, [history, historyIndex, updateStructure]);
+  // Determine if undo/redo is possible
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
 
   // --- Component Interaction Handlers ---
   const handleSelectComponent = useCallback((id: string | null) => {
@@ -196,6 +195,23 @@ const EditorInterface: React.FC = () => {
    }, [pageStructure, updateStructure]);
 
   const handleDropComponent = useCallback((item: { type: string; id?: string }, position: { x: number; y: number }) => {
+    console.log('[EditorInterface handleDropComponent] Fired.');
+    console.log('[EditorInterface handleDropComponent] Received item:', JSON.stringify(item));
+    console.log('[EditorInterface handleDropComponent] Received position:', position);
+
+    // Validate position
+    if (position === null || typeof position.x !== 'number' || typeof position.y !== 'number' || isNaN(position.x) || isNaN(position.y)) {
+      console.error('[EditorInterface handleDropComponent] Invalid or null position received:', position);
+      return; // Prevent proceeding with invalid position
+    }
+
+    // Validate item type
+    if (!item || typeof item.type !== 'string') {
+      console.error('[EditorInterface handleDropComponent] Invalid or missing item type:', item);
+      return; // Prevent proceeding with invalid item
+    }
+
+
     // If item has an ID, it's a move, which should be handled by handleMoveComponent via useDrop in Canvas
     if (item.id) {
         console.log("Drop interpreted as move for:", item.id);
@@ -204,14 +220,42 @@ const EditorInterface: React.FC = () => {
     }
 
     // It's a new component drop
+    // Define default props based on component type
+    let defaultProps: ComponentProps = {};
+    switch (item.type) {
+      case 'Button':
+        defaultProps = { children: 'New Button', variant: 'default', className: 'm-1' };
+        break;
+      case 'Card':
+        defaultProps = { children: 'New Card Content', className: 'p-4 shadow' };
+        break;
+      case 'Input':
+        defaultProps = { placeholder: 'New Input', className: 'm-1 border p-1' }; // Added border/padding
+        break;
+      case 'Checkbox':
+        defaultProps = { 'aria-label': 'New Checkbox', className: 'm-1' }; // Added margin
+        break;
+      case 'Container':
+        // Containers need explicit size or content to be visible
+        defaultProps = { className: 'p-4 border border-dashed border-gray-400 min-h-[50px] min-w-[50px]', children: `New Container (${item.type})` }; // Added border, size, and text
+        break;
+      case 'Heading':
+        defaultProps = { children: 'New Heading', className: 'text-xl font-bold m-1' }; // Added text and margin
+        break;
+      default:
+        // Default for unknown types (though ComponentInstance has a fallback)
+        defaultProps = { children: `New ${item.type}` };
+    }
+
     const newComponent: VisualComponent = {
       id: nanoid(),
       type: item.type,
-      props: {}, // Start with empty props
+      props: defaultProps, // Use default props
       children: [], // Initialize children
       x: Math.round(position.x), // Round position
       y: Math.round(position.y),
-      zIndex: (pageStructure.reduce((maxZ, c) => Math.max(maxZ, c.zIndex || 0), 0) + 1),
+      // Explicitly type accumulator and current value in reduce
+      zIndex: (pageStructure.reduce((maxZ: number, c: VisualComponent) => Math.max(maxZ, c.zIndex || 0), 0) + 1),
     };
     const updatedStructure = [...pageStructure, newComponent];
     updateStructure(updatedStructure, true, 'internal'); // Mark as internal change
@@ -257,8 +301,8 @@ const EditorInterface: React.FC = () => {
     eventBus.publish('code:change', { code: newJs, language: 'javascript' }); // Publish change
   }, []);
 
-
   // --- Toolbar Action Placeholders ---
+  // TODO: Implement actual save/preview logic
   const handleSave = () => console.log('Save action triggered', pageStructure);
   const handlePreview = () => console.log('Preview action triggered');
   const handleCopy = () => console.log('Copy action triggered', selectedComponentIds);
@@ -267,60 +311,125 @@ const EditorInterface: React.FC = () => {
   const handleAlign = (type: string) => console.log(`Align ${type} triggered`, selectedComponentIds);
   const handleDistribute = (type: string) => console.log(`Distribute ${type} triggered`, selectedComponentIds);
 
+  // State for the active view in the main panel (UI Canvas, Code, Templates, Preview)
+  const [activeMainView, setActiveMainView] = useState<'ui' | 'code' | 'templates' | 'preview'>('ui');
+
   // --- Render ---
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground">
-      {/* TODO: Add Toolbar component here and pass handlers */}
-      {/* <EditorToolbar onUndo={handleUndo} onRedo={handleRedo} ... /> */}
+    <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden"> {/* Prevent body scroll */}
+      {/* Integrate the Toolbar */}
+      {/* TODO: Update Toolbar component to accept necessary props (onUndo, onRedo, etc.) */}
+      <Toolbar
+        // onUndo={handleUndo} // Temporarily removed - Toolbar needs update
+        // onRedo={handleRedo} // Temporarily removed - Toolbar needs update
+        // canUndo={canUndo}   // Temporarily removed - Toolbar needs update
+        // canRedo={canRedo}   // Temporarily removed - Toolbar needs update
+        // onSave={handleSave} // Temporarily removed - Toolbar needs update
+        // onPreview={handlePreview} // Temporarily removed - Toolbar needs update
+      />
 
-      <Tabs defaultValue="ui" className="flex flex-col flex-grow min-h-0"> {/* Ensure Tabs container can shrink */}
-        <TabsList className="shrink-0 border-b">
-          <TabsTrigger value="ui">UI Editor</TabsTrigger>
-          <TabsTrigger value="code">Code Editor</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger> {/* Add Templates Tab Trigger */}
-        </TabsList>
+      {/* Main Editor Layout using Resizable Panels */}
+      <PanelGroup direction="horizontal" className="flex-grow min-h-0"> {/* PanelGroup takes remaining space */}
 
-        {/* UI Editor Tab */}
-        <TabsContent value="ui" className="flex-grow overflow-auto min-h-0"> {/* Allow content to grow and scroll */}
-           <div className="h-full w-full"> {/* Ensure inner div takes full space */}
-             <UIEditor
-               // Pass pageStructure. UIEditor needs to be compatible with VisualComponent[]
-               // or use a cast like 'pageStructure as any' if absolutely necessary temporarily.
-               pageStructure={pageStructure}
-               selectedComponentIds={selectedComponentIds} // Pass the full array as expected by UIEditor
-               onSelectComponent={handleSelectComponent}
-               onDropComponent={handleDropComponent} // Passed down to Canvas
-               onMoveComponent={handleMoveComponent} // Passed down to Canvas
-               onUpdateProps={handleUpdateProps}     // Passed down to PropertyPanel
-               // selectedComponentData is handled internally by UIEditor
-             />
-           </div>
-        </TabsContent>
+        {/* Left Panel (Component Library) */}
+        <Panel defaultSize={15} minSize={10} maxSize={25} className="bg-muted/40 overflow-y-auto">
+           {/* Render ComponentLibrary directly */}
+           <ComponentLibrary />
+        </Panel>
 
-        {/* Code Editor Tab */}
-        <TabsContent value="code" className="flex-grow overflow-hidden min-h-0"> {/* Prevent overflow issues */}
-           <div className="h-full w-full"> {/* Ensure inner div takes full space */}
-             <CodeEditor
-                // Pass the generated code strings as new props
-                 generatedHtml={generatedHtml}
-                 generatedCss={generatedCss}
-                 generatedJs={generatedJs}
-                 // Pass onChange handlers to enable Code-to-UI sync
-                 onHtmlChange={handleHtmlChange}
-                 onCssChange={handleCssChange}
-                  onJsChange={handleJsChange}
-              />
-            </div>
-         </TabsContent>
+        <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors flex items-center justify-center">
+          <div className="w-1 h-8 bg-muted-foreground/50 rounded-full" /> {/* Handle visual indicator */}
+        </PanelResizeHandle>
 
-         {/* Templates Tab */}
-         <TabsContent value="templates" className="flex-grow overflow-auto min-h-0"> {/* Allow content to grow and scroll */}
-            <div className="h-full w-full"> {/* Ensure inner div takes full space */}
-              <TemplatesInterface />
-            </div>
-         </TabsContent>
-       </Tabs>
-     </div>
+        {/* Center Panel (Canvas / Code / Templates / Preview) */}
+        <Panel defaultSize={60} minSize={30}> {/* Adjusted size */}
+          <PanelGroup direction="vertical" className="h-full">
+            {/* Top section of Center Panel (Tabs for switching views) */}
+            <Panel defaultSize={5} minSize={5} maxSize={10} className="border-b">
+              <Tabs value={activeMainView} onValueChange={(value) => setActiveMainView(value as any)} className="h-full flex flex-col">
+                <TabsList className="shrink-0 rounded-none border-none px-2 pt-1">
+                  <TabsTrigger value="ui">UI Canvas</TabsTrigger>
+                  <TabsTrigger value="code">Code Editor</TabsTrigger>
+                  <TabsTrigger value="templates">Templates</TabsTrigger>
+                  <TabsTrigger value="preview">Preview</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </Panel>
+
+            {/* Bottom section of Center Panel (Actual Content based on activeMainView) */}
+            {/* Use Panel directly for content area */}
+            <Panel defaultSize={95} minSize={50} className="overflow-hidden relative bg-background"> {/* Use overflow-hidden if children manage scroll */}
+              {activeMainView === 'ui' && (
+                 <Canvas
+                   pageStructure={pageStructure}
+                   // Pass only the first ID for now, or update Canvas to handle array
+                   selectedComponentId={selectedComponentIds[0] ?? null}
+                   onSelectComponent={handleSelectComponent}
+                   onDropComponent={handleDropComponent}
+                   onMoveComponent={handleMoveComponent}
+                   // Add context menu handler if needed
+                 />
+              )}
+              {activeMainView === 'code' && (
+                // Ensure CodeEditor takes full height/width
+                <div className="h-full w-full">
+                  <CodeEditor
+                    generatedHtml={generatedHtml}
+                    generatedCss={generatedCss}
+                    generatedJs={generatedJs}
+                    onHtmlChange={handleHtmlChange}
+                    onCssChange={handleCssChange}
+                    onJsChange={handleJsChange}
+                  />
+                </div>
+              )}
+              {activeMainView === 'templates' && (
+                 <div className="h-full w-full p-4 overflow-y-auto"> {/* Allow scrolling for templates */}
+                   <TemplatesInterface />
+                 </div>
+              )}
+              {activeMainView === 'preview' && (
+                // Ensure Preview takes full height/width and handles its own scrolling
+                <div className="h-full w-full p-4 bg-background">
+                  {/* Placeholder for Preview Component */}
+                  <div className="text-center text-muted-foreground">Live Preview Area</div>
+                  {/* <LivePreview html={generatedHtml} css={generatedCss} js={generatedJs} /> */}
+                </div>
+              )}
+            </Panel>
+          </PanelGroup>
+        </Panel>
+
+        <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors flex items-center justify-center">
+           <div className="w-1 h-8 bg-muted-foreground/50 rounded-full" /> {/* Handle visual indicator */}
+        </PanelResizeHandle>
+
+        {/* Right Panel (Property Panel) - Conditionally render or adjust based on view */}
+        <Panel defaultSize={25} minSize={15} maxSize={35} className="bg-muted/40 overflow-y-auto"> {/* Adjusted size */}
+           {/* Render PropertyPanel directly, passing selected data and handler */}
+           {/* Only show content if in UI mode and a component is selected */}
+           {activeMainView === 'ui' && (
+             <div className="p-4"> {/* Add padding */}
+               <PropertyPanel
+                 selectedComponent={firstSelectedComponentData}
+                 onUpdateProps={handleUpdateProps}
+               />
+             </div>
+           )}
+           {/* Optionally show a placeholder if not in UI mode or nothing selected */}
+           {activeMainView !== 'ui' && (
+              <div className="p-4 text-sm text-muted-foreground">
+                Properties available in UI Canvas mode.
+              </div>
+           )}
+           {activeMainView === 'ui' && !firstSelectedComponentData && (
+              <div className="p-4 text-sm text-muted-foreground">
+                Select a component on the canvas to see its properties.
+              </div>
+           )}
+        </Panel>
+      </PanelGroup>
+    </div>
   );
 };
 

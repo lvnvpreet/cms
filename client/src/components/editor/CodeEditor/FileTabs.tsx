@@ -40,14 +40,18 @@ const FileTabs: React.FC<FileTabsProps> = ({
   return (
     <div className="flex items-center border-b border-border bg-muted/40 h-10 shrink-0"> {/* Set fixed height, prevent shrinking */}
       {/* Scrollable container for file tabs */}
-      <div className="flex-grow overflow-x-auto whitespace-nowrap h-full">
+      <div className="flex-grow overflow-x-auto whitespace-nowrap h-full" role="tablist"> {/* Added role="tablist" */}
         {files.map((file) => (
-          <button
+          <div // Changed from button to div
             key={file.id}
+            role="tab" // Added role
+            aria-selected={activeFileId === file.id} // Added aria-selected
+            tabIndex={0} // Make it focusable
             onClick={() => onSelectTab(file.id)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelectTab(file.id); }} // Handle keyboard activation
             // Apply styles similar to TabsTrigger using cn for conditional active state
             className={cn(
-              "relative inline-flex items-center justify-center whitespace-nowrap h-full px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-r border-border", // Base styles
+              "relative inline-flex items-center justify-center whitespace-nowrap h-full px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-r border-border cursor-pointer", // Base styles, added cursor-pointer
               activeFileId === file.id
                 ? "bg-background text-foreground shadow-sm border-b-2 border-b-primary" // Active styles
                 : "text-muted-foreground hover:bg-muted" // Inactive styles
@@ -71,7 +75,7 @@ const FileTabs: React.FC<FileTabsProps> = ({
             >
               <XIcon className="h-3 w-3" />
             </Button>
-          </button>
+          </div> // Changed from button to div
         ))}
       </div>
 

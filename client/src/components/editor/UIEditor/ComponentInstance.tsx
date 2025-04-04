@@ -7,7 +7,12 @@ import { ComponentData } from './Canvas'; // Import ComponentData type (assuming
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox'; // Import Checkbox
 // Add other component imports as needed
+
+// Basic functional components for missing types
+const DivContainer: React.FC<React.HTMLAttributes<HTMLDivElement>> = (props) => <div {...props} />;
+const H1Heading: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = (props) => <h1 {...props} />;
 
 // Component Registry: Maps type strings to actual component functions
 // Consider moving this to a central utility file if used elsewhere
@@ -15,6 +20,9 @@ const componentRegistry: { [key: string]: React.ComponentType<any> } = {
   Button: Button,
   Card: Card,
   Input: Input,
+  Checkbox: Checkbox,
+  Container: DivContainer, // Map 'Container' type to the DivContainer component
+  Heading: H1Heading,     // Map 'Heading' type to the H1Heading component
   // Add other components here
 };
 

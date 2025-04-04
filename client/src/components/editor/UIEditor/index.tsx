@@ -1,5 +1,6 @@
 import React from 'react';
-import ComponentPalette from './ComponentPalette';
+// import ComponentPalette from './ComponentPalette'; // Remove ComponentPalette
+import ComponentLibrary from '../ComponentLibrary'; // Import the new ComponentLibrary
 import Canvas, { ComponentData } from './Canvas'; // Assuming Canvas exports ComponentData
 import PropertyPanel from './PropertyPanel';
 // Import other necessary components if UIEditor orchestrates them directly
@@ -53,9 +54,10 @@ const UIEditor: React.FC<UIEditorProps> = ({
   return (
     // Ensure this container takes full height within its parent (TabsContent)
     <div className="flex flex-1 overflow-hidden h-full w-full"> {/* Added h-full w-full */}
-      {/* Left Panel: Component Palette */}
-      <div className="w-60 flex-shrink-0 border-r border-border overflow-y-auto bg-muted/40"> {/* Use theme colors */}
-        <ComponentPalette />
+      {/* Left Panel: Component Library */}
+      {/* Increased width slightly for the library */}
+      <div className="w-72 flex-shrink-0 border-r border-border overflow-y-auto bg-muted/40"> {/* Use theme colors */}
+        <ComponentLibrary /> {/* Use ComponentLibrary here */}
       </div>
 
       {/* Center Panel: Canvas */}
