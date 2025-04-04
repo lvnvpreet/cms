@@ -1,8 +1,9 @@
 // client/src/components/editor/EditorInterface.tsx
 import React, { useState, useCallback, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import UIEditor from './UIEditor'; // Assuming UIEditor handles VisualComponent[] or we cast
+import UIEditor from './UIEditor';
 import CodeEditor from './CodeEditor';
+import TemplatesInterface from './Templates'; // Import the Templates interface
 import { nanoid } from 'nanoid';
 import { VisualComponent, GeneratedCode, ComponentProps } from '../../types'; // Use types from centralized file
 // Import eventBus (assuming SyncEngine/index.ts exports it or we import directly)
@@ -276,6 +277,7 @@ const EditorInterface: React.FC = () => {
         <TabsList className="shrink-0 border-b">
           <TabsTrigger value="ui">UI Editor</TabsTrigger>
           <TabsTrigger value="code">Code Editor</TabsTrigger>
+          <TabsTrigger value="templates">Templates</TabsTrigger> {/* Add Templates Tab Trigger */}
         </TabsList>
 
         {/* UI Editor Tab */}
@@ -306,12 +308,19 @@ const EditorInterface: React.FC = () => {
                  // Pass onChange handlers to enable Code-to-UI sync
                  onHtmlChange={handleHtmlChange}
                  onCssChange={handleCssChange}
-                 onJsChange={handleJsChange}
-             />
-           </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+                  onJsChange={handleJsChange}
+              />
+            </div>
+         </TabsContent>
+
+         {/* Templates Tab */}
+         <TabsContent value="templates" className="flex-grow overflow-auto min-h-0"> {/* Allow content to grow and scroll */}
+            <div className="h-full w-full"> {/* Ensure inner div takes full space */}
+              <TemplatesInterface />
+            </div>
+         </TabsContent>
+       </Tabs>
+     </div>
   );
 };
 

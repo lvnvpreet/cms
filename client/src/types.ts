@@ -4,6 +4,7 @@
 // Defines constants for react-dnd item types used across the editor
 export const ItemTypes = {
   COMPONENT: 'component', // Represents a draggable component from the palette or canvas
+  TEMPLATE: 'template',   // Represents a draggable template from the template browser
   // Add other item types if needed later (e.g., LAYER, ASSET)
 };
 
@@ -76,6 +77,40 @@ export interface CodeFile {
   path: string; // Relative path of the file
   content: string; // The textual content of the file
   language: 'html' | 'css' | 'javascript' | 'typescript'; // Language identifier
+}
+
+
+// --- Template System Types ---
+
+/**
+ * Represents a CMS template, including metadata, structure, and display properties.
+ */
+export interface Template {
+  id: string;
+  name: string;
+  description: string;
+  author?: string;
+  version?: string;
+  category: string; // Main category (e.g., Page, Section, Hero, Footer)
+  tags?: string[]; // Additional tags (e.g., industry, style, complexity)
+  previewImageUrl?: string; // Thumbnail/preview
+  demoContentUrl?: string; // Link to live demo or more detailed preview assets
+  // Placeholders for structure - actual implementation might involve complex types or references
+  componentDefinitions?: any; // Structure/relationships of components
+  styleInfo?: any; // Colors, typography, spacing
+  customizationParams?: any; // Options configurable before application
+  documentationUrl?: string; // Link to documentation for complex templates
+
+  // Properties used for display and filtering
+  complexity: 'low' | 'medium' | 'high'; // Derived or explicit complexity
+  estimatedTime: string; // e.g., "5 mins", "1 hour"
+  popularity: number; // e.g., number of downloads or uses
+  rating: number; // e.g., 1-5 stars
+  status?: 'new' | 'popular' | 'updated' | 'featured'; // Visual status indicator
+
+  // Properties related to origin and usage
+  source: 'built-in' | 'custom' | 'marketplace'; // Where the template came from
+  license?: string; // Licensing information, especially for marketplace templates
 }
 
 
