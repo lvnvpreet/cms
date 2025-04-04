@@ -113,5 +113,24 @@ export interface Template {
   license?: string; // Licensing information, especially for marketplace templates
 }
 
+// --- Site Management Types ---
+
+/**
+ * Represents a user's website project within the CMS.
+ */
+export interface Site {
+  id: string; // Unique identifier for the site
+  name: string; // User-defined name of the site
+  thumbnailUrl?: string; // URL for a preview image
+  createdAt: string; // ISO date string when the site was created
+  lastModified: string; // ISO date string when the site was last modified
+  status: 'draft' | 'published' | 'archived'; // Current status of the site
+  // Optional fields based on SiteList.tsx usage
+  type?: string; // e.g., 'Portfolio', 'Blog', 'Store'
+  visits?: number; // Analytics data
+  pages?: number; // Number of pages in the site
+  sharedWith?: string[]; // User IDs or emails of collaborators
+}
+
 
 // Add other shared types/interfaces for the client application here

@@ -9,12 +9,20 @@ import PropertyPanel from './UIEditor/PropertyPanel'; // Assuming path is correc
 import CodeEditor from './CodeEditor';
 import TemplatesInterface from './Templates';
 import Toolbar from './Toolbar';
+// Import Preview Components
+import { LivePreview, DevicePreview } from '../preview';
 import { nanoid } from 'nanoid';
 import { VisualComponent, ComponentProps } from '../../types';
 // Import eventBus (assuming SyncEngine/index.ts exports it or we import directly)
 import { eventBus } from './SyncEngine/EventBus';
 // Keep transformUIToCode for initial/direct generation if needed, but sync handles updates
 import { transformUIToCode } from './SyncEngine/UIToCode';
+
+// Define props for the EditorInterface
+interface EditorInterfaceProps {
+  siteId?: string; // Optional: ID of the site being edited
+  initialData?: any; // Optional: Initial data to load (replace 'any' with a specific type later)
+}
 
 // Example initial page structure using VisualComponent type
 const initialPageStructure: VisualComponent[] = [
@@ -39,8 +47,13 @@ const initialPageStructure: VisualComponent[] = [
   },
 ];
 
-const EditorInterface: React.FC = () => {
-  // State for the visual structure
+// Update component signature to accept props
+const EditorInterface: React.FC<EditorInterfaceProps> = ({ siteId, initialData }) => {
+  // Log the received siteId (useful for debugging)
+  console.log('[EditorInterface] Received siteId prop:', siteId);
+  console.log('[EditorInterface] Received initialData prop:', initialData ? 'Data provided' : 'No initial data');
+
+  // State for the visual structure (potentially initialized from initialData later)
   const [pageStructure, setPageStructure] = useState<VisualComponent[]>(initialPageStructure);
   // State for selected components
   const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>([]);
@@ -390,11 +403,12 @@ const EditorInterface: React.FC = () => {
               )}
               {activeMainView === 'preview' && (
                 // Ensure Preview takes full height/width and handles its own scrolling
-                <div className="h-full w-full p-4 bg-background">
-                  {/* Placeholder for Preview Component */}
-                  <div className="text-center text-muted-foreground">Live Preview Area</div>
-                  {/* <LivePreview html={generatedHtml} css={generatedCss} js={generatedJs} /> */}
-                </div>
+                /* Render DevicePreview wrapping LivePreview */
+                /* DevicePreview handles its own background and padding */
+                <DevicePreview>
+                   {/* LivePreview will eventually get content from SyncEngine/PreviewFrame */}
+                   <LivePreview />
+                </DevicePreview>
               )}
             </Panel>
           </PanelGroup>
