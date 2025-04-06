@@ -144,7 +144,7 @@ export class SiteService {
 
     // 3. Delete the site record from the database
     // const deletedCount = await siteQueries.deleteById(siteId); // Example DB call
-    const deletedCount = 1; // Placeholder
+    let deletedCount: number = 1; // Placeholder - Changed const to let and added type annotation
     if (deletedCount === 0) {
       console.warn(`Site not found for deletion: ${siteId}`);
       // Decide whether to throw an error or just log

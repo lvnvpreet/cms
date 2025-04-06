@@ -1,6 +1,6 @@
 // Import libraries for optimization (e.g., Terser for JS, CSSO/csnano for CSS, SVGO for SVG)
 import Terser from 'terser'; // JS minifier
-import { optimize as optimizeCss } from 'csso'; // CSS minifier/optimizer
+import * as csso from 'csso'; // CSS minifier/optimizer
 // import { optimize as optimizeSvg } from 'svgo'; // SVG optimizer
 // import sharp from 'sharp'; // Already used in ImageService, could be used here too for image optimization
 
@@ -79,10 +79,8 @@ export class OptimizerService {
       compress: options.compress ?? true,
     });
 
-    if (result.error) {
-      throw result.error;
-    }
-    // result.code will be undefined if error occurred, check handled by throw
+    // If Terser encounters an error, it might throw or return undefined for result.code.
+    // The outer try/catch handles throws. We return original content if code is undefined.
     return result.code ?? content;
   }
 
@@ -90,16 +88,15 @@ export class OptimizerService {
    * Optimizes CSS content using CSSO.
    */
   private optimizeCss(content: string, options: any = {}): string {
-     // CSSO's optimize function might have specific options, check its documentation
-    const result = optimizeCss(content, {
+    // CSSO's minify function might have specific options, check its documentation
+    const result = csso.minify(content, {
       restructure: options.restructure ?? true, // Enable restructuring by default
       sourceMap: false,
       ...options,
     });
 
-    if (result.error) {
-      throw result.error;
-    }
+    // csso.minify returns the result directly. If it fails, it might throw an error.
+    // We assume success returns the css property.
     return result.css;
   }
 
