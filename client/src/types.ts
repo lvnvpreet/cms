@@ -134,3 +134,47 @@ export interface Site {
 
 
 // Add other shared types/interfaces for the client application here
+
+// --- User Authentication Types ---
+
+/**
+ * Represents the data required for user registration.
+ */
+export interface UserRegistrationData {
+  firstName?: string; // Added optional firstName
+  lastName?: string; // Added optional lastName
+  username: string; // Changed from name to username
+  email: string;
+  password?: string; // Password might be optional if using OAuth, but required for standard registration
+  // Add other fields as needed (e.g., username, profile picture URL)
+}
+
+/**
+ * Represents the data required for user login.
+ */
+export interface UserLoginData {
+  email: string;
+  password?: string; // Password might be optional if using OAuth
+}
+
+/**
+ * Represents a user object, typically returned after login or fetching profile.
+ */
+export interface User {
+  id: string; // Or number, depending on your backend ID type
+  name: string;
+  email: string;
+  role?: string; // e.g., 'admin', 'editor', 'viewer'
+  createdAt?: string; // ISO date string
+  updatedAt?: string; // ISO date string
+  // Add other relevant user fields (e.g., profilePictureUrl, preferences)
+}
+
+/**
+ * Represents the typical response from an authentication endpoint (e.g., login).
+ */
+export interface AuthResponse {
+  user: User;
+  token: string; // JWT or session token
+  // Add other relevant fields like refreshToken if applicable
+}

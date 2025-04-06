@@ -13,17 +13,13 @@
 // TODO: Implement health check functions to verify database connectivity
 // Example: export async function checkDbConnection() { ... }
 
-// TODO: Export database client/pool for use throughout the application
-// Example: export default pool;
+// TODO: Implement health check functions to verify database connectivity
+// Example: export async function checkDbConnection() { ... }
 
-console.log('Database connection setup needs implementation.');
+// Import the configured pool from the config file using a relative path
+import pool from '../../config/database'; // Changed from '@config/database'
 
-// Placeholder export
-export const dbClient = {
-  query: async (text: string, params?: any[]) => {
-    console.warn('Database client not implemented. Query:', text, params);
-    return { rows: [] };
-  }
-};
+// Export the actual pool as dbClient for use in queries/migrations
+export const dbClient = pool;
 
-export default dbClient;
+export default dbClient; // Also export as default if needed elsewhere

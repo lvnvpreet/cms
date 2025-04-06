@@ -1,8 +1,25 @@
 // server/src/controllers/auth.controller.ts
 import { Request, Response, NextFunction } from 'express';
-// Import necessary services, validation schemas, etc.
-// import * as AuthService from '../services/auth/authService';
-// import { loginSchema, registerSchema, passwordResetSchema, ... } from '../utils/validationSchemas';
+import { z } from 'zod'; // Import Zod
+import { loginUser, registerUser } from '@/services/auth/authService'; // Use path alias
+import { BadRequestError } from '@/utils/errors'; // Import error for validation issues
+
+// --- Validation Schemas ---
+
+const loginSchema = z.object({
+  email: z.string().email({ message: 'Invalid email address' }),
+  password: z.string().min(1, { message: 'Password is required' }), // Keep password validation minimal here, service layer handles complexity
+});
+
+const registerSchema = z.object({
+  firstName: z.string().min(1, { message: 'First name is required' }).optional(), // Added optional firstName
+  lastName: z.string().min(1, { message: 'Last name is required' }).optional(), // Added optional lastName
+  username: z.string().min(3, { message: 'Username must be at least 3 characters long' }).max(50),
+  email: z.string().email({ message: 'Invalid email address' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters long' }),
+  // Add role validation if applicable and allowed during registration
+  // role: z.enum(['user', 'editor']).optional(), // Example: only allow 'user' or 'editor'
+});
 
 /**
  * @controller AuthController
@@ -16,19 +33,27 @@ export class AuthController {
    */
   static async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      // 1. Validate request body (e.g., using Joi or Zod)
-      // const validatedData = loginSchema.parse(req.body);
+      // 1. Validate request body
+      const validatedData = loginSchema.parse(req.body);
 
       // 2. Call AuthService to handle login logic
-      // const { user, token, refreshToken } = await AuthService.loginUser(validatedData);
+      const { user, token } = await loginUser(validatedData); // Pass validated data
 
       // 3. Send response with token and user data
-      // res.status(200).json({ message: 'Login successful', token, refreshToken, user });
-      res.status(501).json({ message: 'Login endpoint not implemented' }); // Placeholder
+      res.status(200).json({ message: 'Login successful', token, user });
     } catch (error) {
-      next(error); // Pass error to the central error handler
+      if (error instanceof z.ZodError) {
+        // Format Zod errors into a user-friendly message or structure
+        // Log the detailed validation errors if needed
+        // console.error("Validation Error Details:", error.errors);
+        // Pass a generic BadRequestError message
+        next(new BadRequestError('Invalid input data. Please check your email and password.'));
+      } else {
+        next(error); // Pass other errors to the central error handler
+      }
     }
   }
+  // Removed duplicate closing braces and catch block here
 
   /**
    * @route POST /api/auth/register
@@ -38,18 +63,28 @@ export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       // 1. Validate request body
-      // const validatedData = registerSchema.parse(req.body);
+      const validatedData = registerSchema.parse(req.body);
 
-      // 2. Call AuthService to register the user
-      // const newUser = await AuthService.registerUser(validatedData);
+      // 2. Call AuthService to register the user. The service will apply the default role ('user').
+      const newUser = await registerUser({
+        ...validatedData,
+        // Removed explicit role: 'viewer' here to let the service default apply
+      });
 
       // 3. Send response
-      // res.status(201).json({ message: 'User registered successfully', userId: newUser.id });
-       res.status(501).json({ message: 'Register endpoint not implemented' }); // Placeholder
+      res.status(201).json({ message: 'User registered successfully', user: newUser });
     } catch (error) {
-      next(error);
+      if (error instanceof z.ZodError) {
+        // Log the detailed validation errors if needed
+        // console.error("Validation Error Details:", error.errors);
+        // Pass a generic BadRequestError message
+        next(new BadRequestError('Invalid registration data. Please check your input.'));
+      } else {
+        next(error); // Pass other errors to the central error handler
+      }
     }
   }
+  // Removed duplicate closing braces and catch block here
 
   /**
    * @route POST /api/auth/request-password-reset

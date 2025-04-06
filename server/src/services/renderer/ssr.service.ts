@@ -85,7 +85,7 @@ export class SsrService {
         <body>
           <div id="root">${htmlContent}</div> ${/* Frameworks often target a root div */''}
           ${initialStateScript}
-          <!-- <script src="/client.js" defer></script> --> ${/* Load hydration script */}
+          <!-- <script src="/client.js" defer></script> --> {/* Load hydration script */}
         </body>
         </html>
       `;

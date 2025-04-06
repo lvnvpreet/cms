@@ -12,7 +12,7 @@ interface UserAttributes {
   lastName?: string;
   avatarUrl?: string;
   preferences?: Record<string, any>;
-  role: 'admin' | 'editor' | 'viewer'; // Example roles
+  role: 'user' | 'admin' | 'editor'; // Updated roles to match DB constraint
   isVerified: boolean;
   lastLoginAt?: Date;
   createdAt: Date;
