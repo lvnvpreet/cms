@@ -1,0 +1,117 @@
+server/
+├── config/
+│   ├── database.ts               # Database connection configuration
+│   ├── auth.ts                   # Authentication configuration
+│   ├── storage.ts                # File storage configuration
+│   ├── cors.ts                   # CORS settings
+│   ├── logging.ts                # Logging configuration
+│   └── index.ts                  # Exports all configurations
+│
+├── public/
+│   ├── uploads/                  # User uploaded files
+│   ├── templates/                # Default site templates
+│   └── static/                   # Static assets
+│
+├── src/
+│   ├── index.ts                  # Server entry point
+│   ├── app.ts                    # Express/server setup
+│   │
+│   ├── controllers/
+│   │   ├── auth.controller.ts    # Authentication controller
+│   │   ├── user.controller.ts    # User management controller
+│   │   ├── site.controller.ts    # Site CRUD operations controller
+│   │   ├── template.controller.ts # Template controller
+│   │   ├── deploy.controller.ts  # Deployment controller
+│   │   └── index.ts              # Export all controllers
+│   │
+│   ├── db/
+│   │   ├── connection.ts         # Database connection setup
+│   │   ├── migrations/           # Database migrations
+│   │   │   └── ...
+│   │   ├── seeds/                # Seed data
+│   │   │   └── ...
+│   │   └── queries/              # Complex queries
+│   │       └── ...
+│   │
+│   ├── middleware/
+│   │   ├── auth.middleware.ts    # Authentication middleware
+│   │   ├── validation.middleware.ts # Input validation
+│   │   ├── error.middleware.ts   # Error handling middleware
+│   │   ├── logging.middleware.ts # Request logging
+│   │   ├── cors.middleware.ts    # CORS handling
+│   │   └── index.ts              # Export all middleware
+│   │
+│   ├── models/
+│   │   ├── user.model.ts         # User data model
+│   │   ├── site.model.ts         # Site data model
+│   │   ├── template.model.ts     # Template data model
+│   │   ├── component.model.ts    # Component data model
+│   │   ├── analytics.model.ts    # Analytics data model
+│   │   └── index.ts              # Export all models
+│   │
+│   ├── routes/
+│   │   ├── auth.routes.ts        # Authentication routes
+│   │   ├── user.routes.ts        # User management routes
+│   │   ├── site.routes.ts        # Site management routes
+│   │   ├── template.routes.ts    # Template routes
+│   │   ├── deploy.routes.ts      # Deployment routes
+│   │   └── index.ts              # Register and export all routes
+│   │
+│   ├── services/
+│   │   ├── auth/
+│   │   │   ├── jwt.service.ts    # JWT token handling
+│   │   │   ├── password.service.ts # Password hashing/verification
+│   │   │   ├── oauth.service.ts  # OAuth integration
+│   │   │   └── index.ts          # Export auth services
+│   │   │
+│   │   ├── codegen/
+│   │   │   ├── html.service.ts   # HTML generation
+│   │   │   ├── css.service.ts    # CSS generation
+│   │   │   ├── js.service.ts     # JavaScript generation
+│   │   │   ├── parser.service.ts # Code parsing
+│   │   │   └── index.ts          # Export codegen services
+│   │   │
+│   │   ├── deploy/
+│   │   │   ├── build.service.ts  # Site build process
+│   │   │   ├── cdn.service.ts    # CDN deployment
+│   │   │   ├── domain.service.ts # Domain management
+│   │   │   └── index.ts          # Export deploy services
+│   │   │
+│   │   ├── renderer/
+│   │   │   ├── preview.service.ts # Live preview rendering
+│   │   │   ├── ssr.service.ts    # Server-side rendering
+│   │   │   ├── optimizer.service.ts # Asset optimization
+│   │   │   └── index.ts          # Export renderer services
+│   │   │
+│   │   ├── sites/
+│   │   │   ├── site.service.ts   # Site operations
+│   │   │   ├── backup.service.ts # Site backup/restore
+│   │   │   ├── analytics.service.ts # Site analytics
+│   │   │   └── index.ts          # Export site services
+│   │   │
+│   │   └── utils/
+│   │       ├── storage.service.ts # File storage service
+│   │       ├── email.service.ts  # Email notification service
+│   │       └── index.ts          # Export utility services
+│   │
+│   └── utils/
+│       ├── logger.ts             # Logging utility
+│       ├── errors.ts             # Error classes and handlers
+│       ├── validators.ts         # Input validation helpers
+│       ├── formatters.ts         # Response formatting
+│       ├── security.ts           # Security utilities
+│       └── helpers.ts            # General helper functions
+│
+├── tests/
+│   ├── unit/                     # Unit tests
+│   │   └── ...
+│   ├── integration/              # Integration tests
+│   │   └── ...
+│   └── fixtures/                 # Test fixtures
+│       └── ...
+│
+├── package.json                  # Project dependencies
+├── tsconfig.json                 # TypeScript configuration
+├── .env.example                  # Example environment variables
+├── .gitignore                    # Git ignore file
+└── README.md                     # Server documentation
